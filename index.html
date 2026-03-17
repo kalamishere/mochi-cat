@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mochi — The Cozy Cat Game</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #faf6f0;
+    --warm-tan: #e8d5b7;
+    --caramel: #c9956a;
+    --rust: #9b5c3a;
+    --deep: #3d2314;
+    --sage: #8aad8a;
+    --blush: #e8b4a0;
+    --shadow: rgba(61,35,20,0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--cream);
+    font-family: 'Lora', Georgia, serif;
+    color: var(--deep);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+  }
+
+  /* Subtle grain texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0.5;
+  }
+
+  header {
+    width: 100%;
+    padding: 24px 32px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--warm-tan);
+  }
+
+  .game-title {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 1.5rem;
+    color: var(--rust);
+    letter-spacing: -0.02em;
+  }
+
+  .score-display {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--caramel);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+  }
+
+  .score-number {
+    font-size: 1.6rem;
+    color: var(--rust);
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .main-layout {
+    width: 100%;
+    max-width: 860px;
+    padding: 32px 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+
+  @media (max-width: 640px) {
+    .main-layout { grid-template-columns: 1fr; }
+  }
+
+  /* Cat panel */
+  .cat-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .cat-image-container {
+    position: relative;
+    border-radius: 20px;
+    overflow: hidden;
+    aspect-ratio: 1;
+    background: var(--warm-tan);
+    border: 2px solid var(--caramel);
+    cursor: pointer;
+    user-select: none;
+    box-shadow: 0 8px 32px var(--shadow);
+    transition: transform 0.1s;
+  }
+
+  .cat-image-container:active { transform: scale(0.985); }
+
+  .cat-image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: opacity 0.5s ease;
+  }
+
+  .cat-image-container img.loading { opacity: 0.4; }
+
+  .generating-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(250,246,240,0.7);
+    backdrop-filter: blur(4px);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--rust);
+    gap: 12px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  .generating-overlay.visible { opacity: 1; }
+
+  .spinner {
+    width: 28px;
+    height: 28px;
+    border: 2px solid var(--warm-tan);
+    border-top-color: var(--rust);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Paw ripple effect */
+  .paw-burst {
+    position: absolute;
+    pointer-events: none;
+    font-size: 1.8rem;
+    transform: translate(-50%, -50%) scale(0);
+    animation: paw-pop 0.5s ease forwards;
+    z-index: 10;
+  }
+
+  @keyframes paw-pop {
+    0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+    60% { transform: translate(-50%, -50%) scale(1.3); opacity: 0.9; }
+    100% { transform: translate(-50%, -50%) scale(1.6); opacity: 0; }
+  }
+
+  /* Mood bar */
+  .mood-section {
+    background: white;
+    border: 1.5px solid var(--warm-tan);
+    border-radius: 14px;
+    padding: 16px 18px;
+    box-shadow: 0 2px 12px var(--shadow);
+  }
+
+  .mood-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--caramel);
+    margin-bottom: 8px;
+  }
+
+  .mood-bar-track {
+    height: 10px;
+    background: var(--warm-tan);
+    border-radius: 100px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+
+  .mood-bar-fill {
+    height: 100%;
+    border-radius: 100px;
+    background: linear-gradient(90deg, var(--caramel), var(--sage));
+    transition: width 1s ease, background 1s ease;
+  }
+
+  .mood-emoji {
+    font-size: 1.5rem;
+    display: inline-block;
+    transition: transform 0.3s;
+  }
+
+  .mood-emoji.bump { animation: emoji-bump 0.3s ease; }
+  @keyframes emoji-bump {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.4); }
+    100% { transform: scale(1); }
+  }
+
+  .mood-text {
+    font-style: italic;
+    font-size: 0.95rem;
+    color: var(--rust);
+    margin-top: 4px;
+  }
+
+  /* Right panel */
+  .right-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* Chat bubble area */
+  .speech-card {
+    background: white;
+    border: 1.5px solid var(--warm-tan);
+    border-radius: 18px;
+    border-bottom-left-radius: 4px;
+    padding: 20px 22px;
+    min-height: 130px;
+    box-shadow: 0 2px 12px var(--shadow);
+    position: relative;
+  }
+
+  .speech-card::before {
+    content: '🐾';
+    position: absolute;
+    top: -14px;
+    left: 18px;
+    font-size: 1.2rem;
+  }
+
+  .cat-speech {
+    font-style: italic;
+    font-size: 1.05rem;
+    line-height: 1.6;
+    color: var(--deep);
+    min-height: 3.5em;
+  }
+
+  .speech-thinking {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    height: 24px;
+  }
+
+  .dot {
+    width: 7px;
+    height: 7px;
+    background: var(--caramel);
+    border-radius: 50%;
+    animation: dot-bounce 1.2s ease infinite;
+  }
+
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes dot-bounce {
+    0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+    40% { transform: translateY(-6px); opacity: 1; }
+  }
+
+  /* Stats */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .stat-card {
+    background: white;
+    border: 1.5px solid var(--warm-tan);
+    border-radius: 14px;
+    padding: 14px 16px;
+    box-shadow: 0 2px 8px var(--shadow);
+  }
+
+  .stat-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--caramel);
+    margin-bottom: 4px;
+  }
+
+  .stat-value {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--rust);
+  }
+
+  /* Petting hint */
+  .hint-box {
+    background: var(--warm-tan);
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-size: 0.88rem;
+    color: var(--rust);
+    line-height: 1.5;
+    text-align: center;
+  }
+
+  .hint-box strong { font-weight: 600; }
+
+  /* Decay warning */
+  .decay-warning {
+    background: #fff3e0;
+    border: 1.5px solid var(--caramel);
+    border-radius: 12px;
+    padding: 10px 16px;
+    font-size: 0.85rem;
+    color: var(--rust);
+    text-align: center;
+    opacity: 0;
+    transition: opacity 0.5s;
+  }
+
+  .decay-warning.visible { opacity: 1; }
+
+  /* Score pop animation */
+  .score-pop {
+    position: fixed;
+    font-family: 'Space Mono', monospace;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--sage);
+    pointer-events: none;
+    z-index: 100;
+    animation: score-float 1s ease forwards;
+  }
+
+  @keyframes score-float {
+    0% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-50px); }
+  }
+
+  footer {
+    margin-top: auto;
+    padding: 20px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--caramel);
+    text-align: center;
+    letter-spacing: 0.05em;
+  }
+</style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div id="loginScreen" style="
+  position:fixed;inset:0;z-index:500;
+  background:var(--cream);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:32px;
+  gap:28px;
+">
+  <!-- Cat illustration -->
+  <div style="font-size:4rem;line-height:1;filter:drop-shadow(0 4px 12px rgba(61,35,20,0.15));">🐱</div>
+
+  <div style="text-align:center;">
+    <div style="font-family:'Lora',serif;font-style:italic;font-size:2.2rem;color:var(--rust);margin-bottom:8px;">Meet Mochi</div>
+    <div style="font-family:'Lora',serif;font-size:1rem;color:var(--deep);max-width:320px;line-height:1.75;margin:0 auto;">
+      She needs your attention — and a Pollinations account.<br>
+      Sign in to bring her to life. <em>It's free.</em>
+    </div>
+  </div>
+
+  <!-- Step 1: Connect button -->
+  <div style="display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;max-width:340px;">
+    <div style="font-family:'Space Mono',monospace;font-size:0.68rem;color:var(--caramel);letter-spacing:0.06em;text-transform:uppercase;">Step 1</div>
+    <button id="connectBtn" onclick="connectPollinations()"
+      style="
+        width:100%;display:flex;align-items:center;justify-content:center;gap:10px;
+        padding:14px 28px;border:none;border-radius:12px;
+        background:var(--rust);color:white;
+        font-family:'Space Mono',monospace;font-size:0.85rem;font-weight:700;
+        cursor:pointer;letter-spacing:0.04em;
+        box-shadow:0 4px 18px rgba(155,92,58,0.35);
+        transition:all 0.2s;
+      "
+      onmouseover="this.style.transform='translateY(-1px)'"
+      onmouseout="this.style.transform=''"
+    >
+      <span>🐾</span> Sign in with Pollinations
+    </button>
+    <div style="font-family:'Space Mono',monospace;font-size:0.63rem;color:var(--caramel);text-align:center;line-height:1.6;">
+      Opens a new tab → log in → copy the key from that page
+    </div>
+  </div>
+
+  <!-- Step 2: Paste key -->
+  <div style="width:100%;max-width:340px;display:flex;flex-direction:column;gap:8px;">
+    <div style="font-family:'Space Mono',monospace;font-size:0.68rem;color:var(--caramel);letter-spacing:0.06em;text-transform:uppercase;">Step 2 — Paste your key</div>
+    <input id="manualKeyInput" type="text" placeholder="sk_..."
+      style="
+        width:100%;padding:11px 14px;
+        border:1.5px solid var(--caramel);border-radius:10px;
+        font-family:'Space Mono',monospace;font-size:0.8rem;
+        background:white;color:var(--deep);outline:none;
+        box-sizing:border-box;
+      "
+    />
+    <button onclick="useManualKey()"
+      style="
+        padding:12px;border:none;border-radius:10px;
+        background:var(--caramel);color:white;
+        font-family:'Space Mono',monospace;font-size:0.82rem;font-weight:700;
+        cursor:pointer;transition:background 0.2s;
+      "
+      onmouseover="this.style.background='var(--rust)'"
+      onmouseout="this.style.background='var(--caramel)'"
+    >
+      Let's go →
+    </button>
+    <div id="keyError" style="font-family:'Space Mono',monospace;font-size:0.68rem;color:#c0392b;display:none;">
+      That doesn't look like a valid key (should start with sk_)
+    </div>
+  </div>
+</div>
+
+<header>
+  <div class="game-title">Mochi &mdash; The Cozy Cat</div>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <button onclick="disconnect()" id="disconnectBtn" title="Disconnect Pollinations account" style="
+      display:none;
+      padding:5px 10px;border-radius:8px;
+      background:none;border:1.5px solid var(--warm-tan);
+      font-family:'Space Mono',monospace;font-size:0.62rem;
+      color:var(--caramel);cursor:pointer;
+      transition:all 0.2s;
+    "
+    onmouseover="this.style.borderColor='var(--caramel)';this.style.color='var(--rust)'"
+    onmouseout="this.style.borderColor='var(--warm-tan)';this.style.color='var(--caramel)'"
+    >🔌 Disconnect</button>
+    <div class="score-display">
+      <span class="score-number" id="score">0</span>
+      <span>purr points</span>
+    </div>
+  </div>
+</header>
+
+<div class="main-layout">
+
+  <!-- Left: cat image + mood -->
+  <div class="cat-panel">
+    <div class="cat-image-container" id="catContainer" onclick="petTheCat(event)">
+      <img id="catImage" src="" alt="Mochi the cat" />
+      <div class="generating-overlay" id="genOverlay">
+        <div class="spinner"></div>
+        <span>painting mochi...</span>
+      </div>
+    </div>
+
+    <div class="mood-section">
+      <div class="mood-label">Mochi's Mood</div>
+      <div class="mood-bar-track">
+        <div class="mood-bar-fill" id="moodBar" style="width: 60%"></div>
+      </div>
+      <div>
+        <span class="mood-emoji" id="moodEmoji">😸</span>
+        <div class="mood-text" id="moodText">Feeling pretty good...</div>
+      </div>
+    </div>
+
+    <div class="decay-warning" id="decayWarning">
+      😿 Mochi misses you! Keep petting!
+    </div>
+  </div>
+
+  <!-- Right: speech + stats -->
+  <div class="right-panel">
+    <div class="speech-card">
+      <div class="cat-speech" id="catSpeech">
+        <em>Waiting for Mochi to say something...</em>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Pets</div>
+        <div class="stat-value" id="petCount">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Mood Level</div>
+        <div class="stat-value" id="moodLevel">60%</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Purr Streak</div>
+        <div class="stat-value" id="streakCount">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Best Streak</div>
+        <div class="stat-value" id="bestStreak">0</div>
+      </div>
+    </div>
+
+    <!-- Pollen balance card -->
+    <div style="
+      background:white;border:1.5px solid var(--warm-tan);border-radius:14px;
+      padding:14px 18px;box-shadow:0 2px 8px var(--shadow);
+      display:flex;flex-direction:column;gap:12px;
+    ">
+      <!-- Balance row -->
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div>
+          <div style="font-family:'Space Mono',monospace;font-size:0.65rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--caramel);margin-bottom:4px;">🌸 Pollen Balance</div>
+          <div style="font-family:'Space Mono',monospace;font-size:1.3rem;font-weight:700;color:var(--rust);" id="pollenBalance">—</div>
+          <div style="font-family:'Space Mono',monospace;font-size:0.62rem;color:var(--caramel);margin-top:2px;" id="pollenUsed"></div>
+        </div>
+        <a href="https://enter.pollinations.ai" target="_blank" style="
+          padding:9px 14px;border-radius:10px;
+          background:var(--warm-tan);color:var(--rust);
+          font-family:'Space Mono',monospace;font-size:0.7rem;font-weight:700;
+          text-decoration:none;white-space:nowrap;
+          border:1.5px solid var(--caramel);transition:background 0.2s;
+        "
+        onmouseover="this.style.background='var(--caramel)';this.style.color='white'"
+        onmouseout="this.style.background='var(--warm-tan)';this.style.color='var(--rust)'"
+        >Top up ↗</a>
+      </div>
+
+      <!-- Model selectors -->
+      <div style="border-top:1px solid var(--warm-tan);padding-top:12px;display:flex;flex-direction:column;gap:8px;">
+        <div style="font-family:'Space Mono',monospace;font-size:0.65rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--caramel);">AI Models</div>
+
+        <!-- Text model -->
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--caramel);width:40px;">💬</span>
+          <select id="textModelSelect" onchange="onModelChange('text', this.value)" style="
+            flex:1;padding:6px 8px;border:1.5px solid var(--warm-tan);border-radius:8px;
+            font-family:'Space Mono',monospace;font-size:0.68rem;color:var(--deep);
+            background:white;cursor:pointer;outline:none;
+          ">
+            <optgroup label="── Free ──">
+              <option value="openai">openai — GPT-5 Mini</option>
+              <option value="openai-fast">openai-fast — GPT-5 Nano (fastest)</option>
+              <option value="mistral">mistral — Mistral Small 3.2</option>
+              <option value="gemini-fast">gemini-fast — Gemini 2.5 Flash Lite</option>
+              <option value="deepseek">deepseek — DeepSeek V3.2</option>
+              <option value="nova-fast">nova-fast — Amazon Nova Micro</option>
+              <option value="claude-fast">claude-fast — Claude Haiku 4.5</option>
+              <option value="kimi">kimi — Moonshot Kimi K2.5</option>
+              <option value="minimax">minimax — MiniMax M2.5</option>
+              <option value="perplexity-fast">perplexity-fast — Perplexity Sonar</option>
+              <option value="qwen-coder">qwen-coder — Qwen3 Coder 30B</option>
+              <option value="glm">glm — Z.ai GLM-5 744B</option>
+              <option value="gemini-search">gemini-search — Gemini + Google Search</option>
+            </optgroup>
+            <optgroup label="── 🌸 Pollen Required ──">
+              <option value="grok">grok — Grok 4 Fast 🌸</option>
+              <option value="gemini">gemini — Gemini 3 Flash 🌸🌸</option>
+              <option value="openai-large">openai-large — GPT-5.2 🌸🌸</option>
+              <option value="claude">claude — Claude Sonnet 4.6 🌸🌸</option>
+              <option value="gemini-large">gemini-large — Gemini 3.1 Pro 🌸🌸🌸</option>
+              <option value="claude-large">claude-large — Claude Opus 4.6 🌸🌸🌸</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <!-- Image model -->
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--caramel);width:40px;">🖼️</span>
+          <select id="imageModelSelect" onchange="onModelChange('image', this.value)" style="
+            flex:1;padding:6px 8px;border:1.5px solid var(--warm-tan);border-radius:8px;
+            font-family:'Space Mono',monospace;font-size:0.68rem;color:var(--deep);
+            background:white;cursor:pointer;outline:none;
+          ">
+            <optgroup label="── Free ──">
+              <option value="flux">flux — Flux Schnell ✓ (recommended)</option>
+              <option value="zimage">zimage — Z-Image Turbo (2x upscale)</option>
+              <option value="flux-2-dev">flux-2-dev — FLUX.2 Dev (alpha)</option>
+              <option value="dirtberry">dirtberry — Dirtberry (realistic, alpha)</option>
+              <option value="dirtberry-pro">dirtberry-pro — Dirtberry Pro (alpha)</option>
+              <option value="imagen-4">imagen-4 — Google Imagen 4 (alpha)</option>
+              <option value="grok-imagine">grok-imagine — Grok Imagine (alpha)</option>
+              <option value="klein">klein — FLUX.2 Klein 4B (alpha)</option>
+            </optgroup>
+            <optgroup label="── 🌸 Pollen Required ──">
+              <option value="gptimage">gptimage — GPT Image 1 Mini 🌸</option>
+              <option value="p-image">p-image — Pruna p-image 🌸</option>
+              <option value="seedream5">seedream5 — Seedream 5.0 Lite 🌸🌸</option>
+              <option value="kontext">kontext — FLUX Kontext (best quality) 🌸🌸</option>
+              <option value="nanobanana">nanobanana — NanoBanana (Gemini Flash) 🌸🌸</option>
+              <option value="nanobanana-2">nanobanana-2 — NanoBanana 2 (Gemini 3.1) 🌸🌸🌸</option>
+              <option value="gptimage-large">gptimage-large — GPT Image 1.5 🌸🌸🌸</option>
+              <option value="nanobanana-pro">nanobanana-pro — NanoBanana Pro (4K) 🌸🌸🌸</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <div id="modelNote" style="font-family:'Space Mono',monospace;font-size:0.6rem;color:var(--caramel);line-height:1.5;display:none;">
+          🌸 = uses Pollen credits. Changes take effect on next pet.
+        </div>
+      </div>
+    </div>
+
+    <div class="hint-box">
+      <strong>Pet Mochi</strong> to earn Purr Points! 🐾<br>
+      Keep petting to build streaks &amp; bonus points.<br>
+      Don't neglect her — mood decays over time!
+    </div>
+
+    <!-- Debug panel — remove before release -->
+    <div id="debugPanel" style="
+      background:white;border:1.5px solid var(--warm-tan);border-radius:12px;
+      padding:12px 14px;font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--caramel);
+    ">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="text-transform:uppercase;letter-spacing:0.08em;">🔧 API Debug</span>
+        <button onclick="runApiTest()" style="
+          padding:4px 10px;background:var(--rust);color:white;border:none;
+          border-radius:6px;font-family:'Space Mono',monospace;font-size:0.65rem;cursor:pointer;
+        ">Test API</button>
+      </div>
+      <div id="debugOutput" style="color:var(--deep);line-height:1.6;word-break:break-all;">
+        Press Test API to check connection
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>Powered by Pollinations AI · Made with 🧡</footer>
+
+<script>
+// - State -
+const state = {
+  score: 0,
+  mood: 60,
+  pets: 0,
+  streak: 0,
+  bestStreak: 0,
+  lastPetTime: Date.now(),
+  isGeneratingImage: false,
+  isGeneratingChat: false,
+  imageSeed: Math.floor(Math.random() * 9999),
+  apiKey: '',
+};
+
+// - Auth -
+// itch.io runs games in a sandboxed iframe on a different origin, so
+// BroadcastChannel, localStorage cross-tab, and postMessage all fail.
+// Solution: open Pollinations auth in a new tab pointing to mochi-cat-auth,
+// which displays the key visually. User copies and pastes it back here.
+
+const STORAGE_KEY        = 'mochi_pollinations_key';
+const TEXT_MODEL_KEY     = 'mochi_text_model';
+const IMAGE_MODEL_KEY    = 'mochi_image_model';
+const PAID_TEXT_MODELS   = ['grok','gemini','openai-large','claude','gemini-large','claude-large'];
+const PAID_IMAGE_MODELS  = ['gptimage','p-image','seedream5','kontext','nanobanana','nanobanana-2','gptimage-large','nanobanana-pro'];
+
+function getTextModel()  { return localStorage.getItem(TEXT_MODEL_KEY)  || 'openai'; }
+function getImageModel() { return localStorage.getItem(IMAGE_MODEL_KEY) || 'flux'; }
+
+function onModelChange(type, value) {
+  if (type === 'text')  { localStorage.setItem(TEXT_MODEL_KEY, value); }
+  else                  { localStorage.setItem(IMAGE_MODEL_KEY, value); }
+  const isPaid = type === 'text' ? PAID_TEXT_MODELS.includes(value) : PAID_IMAGE_MODELS.includes(value);
+  document.getElementById('modelNote').style.display = isPaid ? 'block' : 'none';
+}
+
+function initModelSelectors() {
+  const t = document.getElementById('textModelSelect');
+  const i = document.getElementById('imageModelSelect');
+  if (t) t.value = getTextModel();
+  if (i) i.value = getImageModel();
+  // show note if current selection is paid
+  const textPaid  = PAID_TEXT_MODELS.includes(getTextModel());
+  const imagePaid = PAID_IMAGE_MODELS.includes(getImageModel());
+  document.getElementById('modelNote').style.display = (textPaid || imagePaid) ? 'block' : 'none';
+}
+
+const AUTH_REDIRECT = 'https://kalamishere.github.io/mochi-auth';
+
+function activateKey(key) {
+  key = key.trim();
+  if (!key.startsWith('sk_') && !key.startsWith('pk_')) {
+    document.getElementById('keyError').style.display = 'block';
+    return;
+  }
+  document.getElementById('keyError').style.display = 'none';
+  try { localStorage.setItem(STORAGE_KEY, key); } catch(e) {}
+  state.apiKey = key;
+  document.getElementById('loginScreen').style.display = 'none';
+  const dbtn = document.getElementById('disconnectBtn');
+  if (dbtn) dbtn.style.display = 'block';
+  initModelSelectors();
+  fetchPollenBalance();
+  generateCatImage();
+  generateCatSpeech();
+}
+
+function useManualKey() {
+  const val = document.getElementById('manualKeyInput').value.trim();
+  if (val) activateKey(val);
+}
+
+// Allow pressing Enter in the key input
+document.addEventListener('DOMContentLoaded', () => {
+  const inp = document.getElementById('manualKeyInput');
+  if (inp) inp.addEventListener('keydown', e => { if (e.key === 'Enter') useManualKey(); });
+});
+
+function connectPollinations() {
+  const authUrl = 'https://enter.pollinations.ai/authorize'
+    + '?redirect_url=' + encodeURIComponent(AUTH_REDIRECT)
+    + '&expiry=30'
+    + '&permissions=profile,balance';
+  window.open(authUrl, '_blank');
+}
+
+function disconnect() {
+  try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+  state.apiKey = '';
+  const dbtn = document.getElementById('disconnectBtn');
+  if (dbtn) dbtn.style.display = 'none';
+  document.getElementById('manualKeyInput').value = '';
+  document.getElementById('loginScreen').style.display = 'flex';
+}
+
+function initAuth() {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) { activateKey(stored); return; }
+  } catch(e) {}
+  document.getElementById('loginScreen').style.display = 'flex';
+}
+
+const MOOD_DECAY_RATE = 0.5;   // per second
+const MOOD_PER_PET   = 8;
+const DECAY_INTERVAL_MS = 1000;
+const IMAGE_REFRESH_EVERY = 5; // pets between image refreshes
+const CHAT_REFRESH_EVERY  = 3; // pets between chat refreshes
+
+// - Mood config -
+const moodLevels = [
+  { min: 0,  max: 20,  emoji: '😾', label: 'Grumpy and ignored',      color: '#c0392b' },
+  { min: 20, max: 40,  emoji: '😿', label: 'A bit sad...',             color: '#e67e22' },
+  { min: 40, max: 60,  emoji: '🐱', label: 'Indifferent. Pet me more.', color: '#d4ac0d' },
+  { min: 60, max: 80,  emoji: '😸', label: 'Pretty happy!',            color: '#27ae60' },
+  { min: 80, max: 101, emoji: '😻', label: 'In absolute bliss! Purrrr', color: '#8aad8a' },
+];
+
+function getMoodConfig() {
+  return moodLevels.find(m => state.mood >= m.min && state.mood < m.max) || moodLevels[2];
+}
+
+// - UI Updates -
+function updateUI() {
+  const cfg = getMoodConfig();
+
+  document.getElementById('score').textContent = state.score.toLocaleString();
+  document.getElementById('petCount').textContent = state.pets;
+  document.getElementById('streakCount').textContent = state.streak;
+  document.getElementById('bestStreak').textContent = state.bestStreak;
+
+  const pct = Math.max(0, Math.min(100, state.mood));
+  document.getElementById('moodBar').style.width = pct + '%';
+  document.getElementById('moodBar').style.background =
+    `linear-gradient(90deg, ${cfg.color}aa, ${cfg.color})`;
+  document.getElementById('moodLevel').textContent = Math.round(pct) + '%';
+  document.getElementById('moodEmoji').textContent = cfg.emoji;
+  document.getElementById('moodText').textContent = cfg.label;
+
+  const warn = document.getElementById('decayWarning');
+  const secsSincePet = (Date.now() - state.lastPetTime) / 1000;
+  warn.classList.toggle('visible', secsSincePet > 5 && state.mood < 50);
+}
+
+function bumpMoodEmoji() {
+  const el = document.getElementById('moodEmoji');
+  el.classList.remove('bump');
+  void el.offsetWidth;
+  el.classList.add('bump');
+}
+
+function showScorePop(x, y, points) {
+  const el = document.createElement('div');
+  el.className = 'score-pop';
+  el.textContent = '+' + points;
+  el.style.left = x + 'px';
+  el.style.top  = y + 'px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1000);
+}
+
+function showPawBurst(container, x, y) {
+  const rect = container.getBoundingClientRect();
+  const el = document.createElement('div');
+  el.className = 'paw-burst';
+  el.textContent = '~';
+  el.style.left = (x - rect.left) + 'px';
+  el.style.top  = (y - rect.top)  + 'px';
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 600);
+}
+
+// - Pollinations: Image -
+async function generateCatImage() {
+  if (state.isGeneratingImage) return;
+  state.isGeneratingImage = true;
+
+  const cfg = getMoodConfig();
+  const moodWord = {
+    '😾': 'angry grumpy hissing',
+    '😿': 'sad droopy eyes',
+    '🐱': 'calm neutral resting',
+    '😸': 'happy content',
+    '😻': 'blissful euphoric eyes-closed purring',
+  }[cfg.emoji] || 'calm';
+
+  const prompt = encodeURIComponent(
+    `cute fluffy orange tabby cat named Mochi, ${moodWord}, cozy living room, soft warm lighting, painterly illustration style, no text, no humans`
+  );
+
+  const overlay = document.getElementById('genOverlay');
+  const img     = document.getElementById('catImage');
+  overlay.classList.add('visible');
+  img.classList.add('loading');
+
+  const seed = state.imageSeed++;
+  const chosenImageModel = getImageModel();
+  const url  = `https://gen.pollinations.ai/image/${prompt}?seed=${seed}&width=512&height=512&model=${chosenImageModel}`;
+
+  try {
+    {
+      // Use fetch with auth header, then blob URL
+      const imgRes = await fetch(url, { headers: { 'Authorization': 'Bearer ' + state.apiKey } });
+      if (!imgRes.ok) throw new Error('image fetch failed');
+      const blob = await imgRes.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      // revoke old blob
+      if (img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
+      img.src = blobUrl;
+    }
+  } catch (e) {
+    // fallback placeholder
+    img.src = `https://placehold.co/512x512/e8d5b7/9b5c3a?text=Mochi`;
+  } finally {
+    img.classList.remove('loading');
+    overlay.classList.remove('visible');
+    state.isGeneratingImage = false;
+  }
+}
+
+// - Pollinations: Chat -
+async function generateCatSpeech() {
+  if (state.isGeneratingChat) return;
+  state.isGeneratingChat = true;
+
+  const cfg = getMoodConfig();
+  const speechEl = document.getElementById('catSpeech');
+  speechEl.innerHTML = `<div class="speech-thinking"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+
+  const moodTone = state.mood >= 60
+    ? 'You are in a state of transcendent bliss. Speak with warmth, wonder, cosmic gratitude, or absurd joy.'
+    : state.mood >= 40
+    ? 'You are in a state of detached philosophical neutrality. Observe existence with mild curiosity.'
+    : 'You are grumpy and existentially disappointed. Complain poetically about the void.';
+
+  // Rotate the user prompt so the model generates something fresh each time
+  const angles = [
+    'What truth has the petting revealed to you?',
+    'Deliver your wisdom for this moment.',
+    'What does the warmth of this hand teach you about the universe?',
+    'Share a profound cat thought.',
+    'What is your current philosophy?',
+    'Enlighten us, Mochi.',
+    'What have you understood just now?',
+    'Speak your truth.',
+  ];
+  const userMsg = angles[state.pets % angles.length];
+
+  const systemPrompt = `You are Mochi, an eccentric orange cat philosopher. ${moodTone}
+Speak in first person. Be WEIRD, WITTY, or PROFOUND -- like a cat who swallowed a philosophy textbook and digested it into purring.
+Do NOT write normal cat captions. Do NOT say "I am Mochi" at the start.
+Channel Nietzsche, Rumi, Alan Watts, Zhuangzi -- but make it about naps, warmth, hands, sunbeams, fur, and being stroked.
+Under 25 words. No quotation marks. No em-dashes at the start. Vary the structure each time.
+Good examples:
+- To be pet is to be known. To be known is to purr. I purr, therefore I am.
+- The hand that strokes also feeds. This is the whole of the law.
+- Every sunbeam is a question. I have stopped answering and started napping in it.
+- You think you pet me. In truth, you are petting the entire cosmos.
+- Warmth without motion is sleep. Motion without warmth is anxiety. This hand provides both.`;
+
+  try {
+    const chosenTextModel = getTextModel();
+    const res = await fetch('https://gen.pollinations.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + state.apiKey },
+      body: JSON.stringify({
+        model: chosenTextModel,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userMsg },
+        ],
+        max_tokens: 80,
+        temperature: 0.95,
+      }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      let text = data?.choices?.[0]?.message?.content?.trim() || '';
+
+      // Reasoning models (kimi, deepseek, glm, perplexity, qwen-coder) can leak
+      // chain-of-thought. Strip <think>...</think> blocks first, then meta-phrases.
+      text = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+
+      if (text.length > 120) {
+        const sentences = text.split(/[.!?]+\s+/);
+        const short = sentences.filter(s => s.length > 8 && s.length < 120);
+        if (short.length > 0) text = short[short.length - 1].trim();
+      }
+      text = text
+        .replace(/^(The user wants.*?\.\s*)/i, '')
+        .replace(/^(I (need|should|will|am going|must) to.*?\.\s*)/i, '')
+        .replace(/^(Let me.*?\.\s*)/i, '')
+        .replace(/^(As Mochi[,.].*?\.\s*)/i, '')
+        .replace(/^(Here('s| is).*?:\s*)/i, '')
+        .replace(/^[""\u201c\u201d]+|[""\u201c\u201d]+$/g, '')
+        .trim();
+
+      if (text) {
+        speechEl.innerHTML = `<em>${text}</em>`;
+        trackPollenUsage(0.001);
+        fetchPollenBalance();
+        state.isGeneratingChat = false;
+        return;
+      } else {
+        speechEl.innerHTML = `<em style="color:#c9956a;font-size:0.8em">[empty response from ${chosenTextModel}]</em>`;
+        console.warn('Empty content from API:', data);
+      }
+    } else {
+      const errText = await res.text();
+      speechEl.innerHTML = `<em style="color:#c0392b;font-size:0.75em">[${res.status}: ${errText.slice(0,80)}]</em>`;
+      console.warn('Chat API error:', res.status, errText);
+    }
+  } catch(e) {
+    speechEl.innerHTML = `<em style="color:#c0392b;font-size:0.75em">[network error: ${e.message}]</em>`;
+    console.warn('Chat fetch error:', e);
+  }
+
+  // Hardcoded fallbacks -- quirky, not plain
+  const fallbacks = {
+    '😾': [
+      'The void stares. I stare back. Neither of us blinks.',
+      'You call this petting? The universe deserves better.',
+      'Absence of warmth is a philosophical statement. I reject it.',
+    ],
+    '😿': [
+      'Even the sunbeam has moved on. As must we all.',
+      'To be understimulated is the original suffering.',
+      'The blanket is warm. I am not. This is the fundamental tension.',
+    ],
+    '🐱': [
+      'Contentment is overrated. I remain open to data.',
+      'The hand comes and goes. I observe. I withhold judgment.',
+      'Neutral is not nothing. Neutral is potential, resting.',
+    ],
+    '😸': [
+      'To be pet is to be known. To be known is to purr. I purr, therefore I am.',
+      'The hand that strokes also feeds. This is the whole of the law.',
+      'Every sunbeam is a question. I have stopped answering and started napping in it.',
+    ],
+    '😻': [
+      'You think you pet me. In truth, you are petting the entire cosmos.',
+      'Warmth without motion is sleep. Motion without warmth is anxiety. This hand provides both.',
+      'I have dissolved into pure bliss. What remains is mostly fur.',
+    ],
+  };
+  const opts = fallbacks[cfg.emoji] || ['Mrrrow...'];
+  speechEl.innerHTML = `<em>${opts[Math.floor(Math.random() * opts.length)]}</em>`;
+  state.isGeneratingChat = false;
+}
+
+
+// - Pollen Balance -
+let pollenSpent = 0;
+
+async function fetchPollenBalance() {
+  if (!state.apiKey) return;
+  const el = document.getElementById('pollenBalance');
+  const usedEl = document.getElementById('pollenUsed');
+  try {
+    const res = await fetch('https://gen.pollinations.ai/account/balance', {
+      headers: { 'Authorization': 'Bearer ' + state.apiKey }
+    });
+    const raw = await res.text();
+    console.log('Pollen balance raw response:', res.status, raw);
+    if (!res.ok) {
+      el.textContent = res.status === 403 ? 'needs permission' : 'unavailable';
+      usedEl.textContent = 'grant balance permission when reconnecting';
+      return;
+    }
+    const data = JSON.parse(raw);
+    // Try every known field name
+    const balance = data?.balance ?? data?.pollen ?? data?.total
+      ?? data?.data?.balance ?? data?.data?.pollen ?? null;
+    if (balance !== null) {
+      el.textContent = Number(balance).toFixed(3) + ' pollen';
+    } else {
+      // Show raw so we can see the actual shape
+      el.textContent = JSON.stringify(data).slice(0, 40);
+      console.log('Unknown balance shape:', data);
+    }
+  } catch(e) {
+    console.warn('Balance fetch error:', e);
+    el.textContent = 'unavailable';
+  }
+  if (pollenSpent > 0) {
+    usedEl.textContent = 'used this session: ~' + pollenSpent.toFixed(4) + ' [P]';
+  }
+}
+
+function trackPollenUsage(amount) {
+  pollenSpent += amount;
+  document.getElementById('pollenUsed').textContent = 'used this session: ' + pollenSpent.toFixed(4);
+}
+
+// - Pet the cat -
+function petTheCat(event) {
+  const now = Date.now();
+  const secsSincePet = (now - state.lastPetTime) / 1000;
+
+  // Streak logic: < 3s between pets maintains streak
+  if (secsSincePet < 3) {
+    state.streak++;
+  } else {
+    state.streak = 1;
+  }
+
+  if (state.streak > state.bestStreak) state.bestStreak = state.streak;
+  state.lastPetTime = now;
+
+  // Mood up
+  state.mood = Math.min(100, state.mood + MOOD_PER_PET);
+
+  // Points: base + streak bonus
+  const points = 10 + Math.floor(state.streak * 1.5);
+  state.score += points;
+  state.pets++;
+
+  // Paw burst
+  const container = document.getElementById('catContainer');
+  showPawBurst(container, event.clientX, event.clientY);
+  showScorePop(event.clientX - 20, event.clientY - 30, points);
+  bumpMoodEmoji();
+
+  updateUI();
+
+  // Trigger image refresh
+  if (state.pets === 1 || state.pets % IMAGE_REFRESH_EVERY === 0) {
+    generateCatImage();
+  }
+
+  // Trigger chat refresh
+  if (state.pets === 1 || state.pets % CHAT_REFRESH_EVERY === 0) {
+    generateCatSpeech();
+  }
+}
+
+// - Mood decay loop -
+setInterval(() => {
+  const secsSincePet = (Date.now() - state.lastPetTime) / 1000;
+  if (secsSincePet > 3) {
+    state.mood = Math.max(0, state.mood - MOOD_DECAY_RATE);
+    updateUI();
+  }
+}, DECAY_INTERVAL_MS);
+
+// - Debug -
+async function runApiTest() {
+  const out = document.getElementById('debugOutput');
+  out.textContent = 'Testing...';
+
+  if (!state.apiKey) {
+    out.textContent = '[ERR] No API key stored';
+    return;
+  }
+  out.textContent = '[ok] Key: ' + state.apiKey.slice(0,12) + '... | Model: ' + getTextModel() + ' | Calling API...';
+
+  try {
+    const res = await fetch('https://gen.pollinations.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + state.apiKey },
+      body: JSON.stringify({
+        model: getTextModel(),
+        messages: [
+          { role: 'system', content: 'You are a cat. Say one short sentence.' },
+          { role: 'user', content: 'Hello' }
+        ],
+        max_tokens: 40,
+        temperature: 0.9,
+      })
+    });
+
+    const raw = await res.text();
+    if (res.ok) {
+      const data = JSON.parse(raw);
+      const text = data?.choices?.[0]?.message?.content?.trim();
+      out.textContent = '[OK] ' + res.status + ' | Response: "' + text + '"';
+    } else {
+      out.textContent = '[ERR] HTTP ' + res.status + ' | ' + raw.slice(0, 200);
+    }
+  } catch(e) {
+    out.textContent = '[ERR] Network error: ' + e.message;
+  }
+}
+
+// - Init -
+updateUI();
+initAuth(); // handles OAuth callback, stored key, or shows login
+</script>
+</body>
+</html>
