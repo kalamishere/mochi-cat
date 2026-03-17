@@ -917,7 +917,7 @@ Good examples:
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userMsg },
         ],
-        max_tokens: 80,
+        max_tokens: 2000,
         temperature: 0.95,
         seed: -1,
       }),
@@ -1119,7 +1119,7 @@ async function runApiTest() {
           { role: 'system', content: 'You are a cat. Say one short sentence.' },
           { role: 'user', content: 'Hello' }
         ],
-        max_tokens: 40,
+        max_tokens: 2000,
         temperature: 0.9,
         seed: -1,
       })
