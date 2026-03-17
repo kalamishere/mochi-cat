@@ -1096,20 +1096,25 @@ setInterval(() => {
 // - Debug -
 async function runApiTest() {
   const out = document.getElementById('debugOutput');
+  out.style.whiteSpace = 'pre-wrap';
   out.textContent = 'Testing...';
 
   if (!state.apiKey) {
     out.textContent = '[ERR] No API key stored';
     return;
   }
-  out.textContent = '[ok] Key: ' + state.apiKey.slice(0,12) + '... | Model: ' + getTextModel() + ' | Calling API...';
 
+  const model = getTextModel();
+  const results = [];
+
+  // Test 1: POST /v1/chat/completions
+  out.textContent = `Testing POST /v1/chat/completions (${model})...`;
   try {
     const res = await fetch('https://gen.pollinations.ai/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + state.apiKey },
       body: JSON.stringify({
-        model: getTextModel(),
+        model: model,
         messages: [
           { role: 'system', content: 'You are a cat. Say one short sentence.' },
           { role: 'user', content: 'Hello' }
@@ -1119,18 +1124,34 @@ async function runApiTest() {
         seed: -1,
       })
     });
-
     const raw = await res.text();
+    results.push(`[POST /v1/chat/completions] ${res.status}\nRAW: ${raw.slice(0, 500)}`);
     if (res.ok) {
       const data = JSON.parse(raw);
-      const text = data?.choices?.[0]?.message?.content?.trim();
-      out.textContent = '[OK] ' + res.status + ' | Response: "' + text + '"';
-    } else {
-      out.textContent = '[ERR] HTTP ' + res.status + ' | ' + raw.slice(0, 200);
+      const content = data?.choices?.[0]?.message?.content;
+      const refusal = data?.choices?.[0]?.message?.refusal;
+      const role = data?.choices?.[0]?.message?.role;
+      const finish = data?.choices?.[0]?.finish_reason;
+      results.push(`content: ${JSON.stringify(content)}\nrefusal: ${JSON.stringify(refusal)}\nrole: ${role}, finish: ${finish}`);
     }
   } catch(e) {
-    out.textContent = '[ERR] Network error: ' + e.message;
+    results.push(`[POST] Error: ${e.message}`);
   }
+
+  // Test 2: GET /text/ endpoint (simpler, may work differently)
+  out.textContent = `Testing GET /text/ (${model})...`;
+  try {
+    const textUrl = `https://gen.pollinations.ai/text/${encodeURIComponent('You are a cat. Say meow.')}?model=${model}&seed=-1`;
+    const res2 = await fetch(textUrl, {
+      headers: { 'Authorization': 'Bearer ' + state.apiKey }
+    });
+    const raw2 = await res2.text();
+    results.push(`\n[GET /text/] ${res2.status}\nRAW: ${raw2.slice(0, 300)}`);
+  } catch(e) {
+    results.push(`\n[GET /text/] Error: ${e.message}`);
+  }
+
+  out.textContent = results.join('\n');
 }
 
 // - Init -
