@@ -1120,10 +1120,17 @@ function openLogin() {
 }
 
 function showSleepingPreview() {
-  // Show sleeping Mochi using free image API (no auth needed)
-  const prompt = encodeURIComponent('cute fluffy orange tabby cat sleeping peacefully curled up, cozy living room, warm blanket, soft warm lighting, painterly illustration style, no text, no humans');
+  // Use inline SVG so no network request needed (works everywhere including itch.io)
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+    <rect width="512" height="512" fill="#e8d5b7"/>
+    <circle cx="256" cy="230" r="110" fill="#c9956a" opacity="0.25"/>
+    <text x="256" y="210" font-size="110" text-anchor="middle" dominant-baseline="middle" font-family="Georgia,serif" fill="#9b5c3a" opacity="0.9">😴</text>
+    <text x="256" y="330" font-size="38" text-anchor="middle" font-family="monospace" fill="#9b5c3a" letter-spacing="18" font-style="italic">z z z</text>
+    <text x="256" y="390" font-size="20" text-anchor="middle" font-family="monospace" fill="#c9956a" letter-spacing="3">tap to wake mochi up</text>
+  </svg>`;
   const img = document.getElementById('catImage');
-  img.src = 'https://image.pollinations.ai/prompt/' + prompt + '?seed=42&width=512&height=512&model=flux&nologo=true';
+  img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+  img.onerror = null;
   // Set sleeping quote
   const speech = document.getElementById('catSpeech');
   if (speech) speech.innerHTML = '<em>z z z . . .</em>';
@@ -1140,9 +1147,7 @@ function showSleepingPreview() {
   document.querySelector('.main-layout').classList.add('single-col');
   document.getElementById('decayWarning').classList.remove('visible');
   document.getElementById('sleepOverlay').classList.remove('visible');
-  document.getElementById('catImage').style.filter = '';
-  // Fallback if image can't load (e.g. CORS on localhost)
-  img.onerror = () => { img.src = 'https://placehold.co/512x512/e8d5b7/9b5c3a?text=zzz...+Mochi'; };
+  img.style.filter = '';
 }
 
 function initAuth() {
