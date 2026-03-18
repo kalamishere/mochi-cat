@@ -770,39 +770,56 @@
       Keep petting to build combos &amp; bonus points.
     </div>
 
-    <!-- Login prompt (shown when not connected) -->
-    <div id="loginPrompt" style="display:none;cursor:pointer;" onclick="openLogin()">
-      <div style="
-        background: white;
-        border: 2px solid var(--warm-tan);
-        border-radius: 16px;
-        padding: 20px 24px;
-        text-align: center;
-        box-shadow: 0 4px 20px var(--shadow);
-        transition: all 0.2s;
-        margin-top: 8px;
-      "
-      onmouseover="this.style.transform='translateY(-2px)';this.style.borderColor='var(--caramel)'"
-      onmouseout="this.style.transform='';this.style.borderColor='var(--warm-tan)'"
-      >
-        <div style="font-size:2rem;margin-bottom:8px;">😴</div>
-        <div style="font-family:'Lora',serif;font-style:italic;font-size:1.2rem;color:var(--rust);margin-bottom:6px;">
-          Mochi is sleeping...
+    <!-- Sign-in engagement card (shown when not connected) -->
+    <div id="loginPrompt" style="display:none;flex-direction:column;gap:14px;">
+
+      <!-- Tagline + CTA -->
+      <div style="background:#fff5f8;border:1.5px solid var(--warm-tan);border-radius:18px;padding:22px 24px;text-align:center;box-shadow:0 4px 16px var(--shadow);">
+        <div style="font-family:'Lora',serif;font-style:italic;font-size:1.25rem;color:var(--rust);margin-bottom:8px;line-height:1.3;">
+          Your own AI cat companion,<br>waiting to be woken up
         </div>
-        <div style="font-family:'Lora',serif;font-size:0.9rem;color:var(--deep);line-height:1.6;margin-bottom:12px;">
-          Sign in to wake her up and start playing!<br>
-          <em style="color:var(--caramel);">Free Pollinations account required</em>
+        <div style="font-family:'Space Mono',monospace;font-size:0.68rem;color:var(--caramel);line-height:1.9;margin-bottom:18px;">
+          Pet her. Chat with her. Watch her grow.<br>
+          She generates unique art &amp; philosophy — just for you.
         </div>
-        <div style="
+        <button onclick="openLogin()" style="
           display:inline-flex;align-items:center;gap:8px;
-          padding:12px 24px;border-radius:12px;
-          background:var(--rust);color:white;
-          font-family:'Space Mono',monospace;font-size:0.82rem;font-weight:700;
-          box-shadow:0 4px 16px rgba(155,92,58,0.3);
-        ">
+          padding:12px 28px;border-radius:100px;border:none;
+          background:var(--rust);color:white;cursor:pointer;
+          font-family:'Space Mono',monospace;font-size:0.8rem;font-weight:700;
+          box-shadow:0 4px 0 0 #c04070,0 6px 20px rgba(232,93,138,0.3);
+          transition:all 0.15s;
+        "
+        onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 0 0 #c04070,0 10px 24px rgba(232,93,138,0.35)'"
+        onmouseout="this.style.transform='';this.style.boxShadow='0 4px 0 0 #c04070,0 6px 20px rgba(232,93,138,0.3)'"
+        onmousedown="this.style.transform='translateY(3px)';this.style.boxShadow='0 1px 0 0 #c04070'"
+        onmouseup="this.style.transform='';this.style.boxShadow='0 4px 0 0 #c04070,0 6px 20px rgba(232,93,138,0.3)'"
+        >
           🐾 Wake Mochi Up
+        </button>
+        <div style="font-family:'Space Mono',monospace;font-size:0.6rem;color:var(--caramel);margin-top:10px;opacity:0.75;">
+          free · needs a Pollinations account
         </div>
       </div>
+
+      <!-- Bond progression teaser -->
+      <div style="background:#fff5f8;border:1.5px solid var(--warm-tan);border-radius:18px;padding:18px 20px;box-shadow:0 4px 16px var(--shadow);">
+        <div style="font-family:'Space Mono',monospace;font-size:0.6rem;color:var(--caramel);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">10 levels of friendship to unlock</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--warm-tan);flex-shrink:0;"></div>
+            <span style="font-family:'Lora',serif;font-style:italic;font-size:0.82rem;color:var(--caramel);">Stranger</span>
+            <div style="flex:1;height:1px;background:var(--warm-tan);opacity:0.5;"></div>
+            <span style="font-family:'Lora',serif;font-style:italic;font-size:0.82rem;color:var(--rust);">One With Mochi</span>
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--rust);flex-shrink:0;"></div>
+          </div>
+          <div style="font-family:'Space Mono',monospace;font-size:0.62rem;color:var(--caramel);line-height:1.7;padding-left:18px;">
+            Each level unlocks new AI art backdrops.<br>
+            Mochi remembers you between sessions.
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -1044,6 +1061,7 @@ function activateKey(key) {
   const wakeBtn = document.querySelector('.sleep-wake-btn');
   if (wakeBtn) { wakeBtn.textContent = 'wake Mochi up'; wakeBtn.onclick = function(e) { e.stopPropagation(); wakeMochi(); }; }
   document.getElementById('sleepOverlay').classList.remove('visible');
+  document.getElementById('loginPrompt').style.display = 'none';
   document.getElementById('bondBadge').style.display = 'flex';
   document.getElementById('settingsBtn').style.display = 'block';
   document.getElementById('journalBtn').style.display = 'block';
@@ -1098,78 +1116,146 @@ function openLogin() {
 }
 
 function showSleepingPreview() {
-  // Illustrated sleeping orange tabby — inline SVG, no network request needed
+  // Illustrated sleeping cat — twilight scene, fully self-contained SVG
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
     <defs>
-      <radialGradient id="bg" cx="50%" cy="55%" r="75%">
-        <stop offset="0%" stop-color="#fce4ed"/>
-        <stop offset="60%" stop-color="#f5c2d4"/>
-        <stop offset="100%" stop-color="#e8a0c0"/>
+      <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#1e0e3e"/>
+        <stop offset="45%" stop-color="#6b2d6b"/>
+        <stop offset="100%" stop-color="#f0906a"/>
+      </linearGradient>
+      <radialGradient id="moonG" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#fff8d0"/>
+        <stop offset="100%" stop-color="#ffe090"/>
       </radialGradient>
-      <radialGradient id="bodyG" cx="40%" cy="40%" r="60%">
-        <stop offset="0%" stop-color="#f0a060"/>
-        <stop offset="100%" stop-color="#c97040"/>
+      <radialGradient id="glow" cx="50%" cy="60%" r="50%">
+        <stop offset="0%" stop-color="#ffd6e8" stop-opacity="0.55"/>
+        <stop offset="100%" stop-color="#ffd6e8" stop-opacity="0"/>
       </radialGradient>
-      <radialGradient id="bellyG" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stop-color="#fde8d8"/>
-        <stop offset="100%" stop-color="#f5c8a8"/>
+      <radialGradient id="bodyG" cx="35%" cy="35%" r="70%">
+        <stop offset="0%" stop-color="#f5a850"/>
+        <stop offset="60%" stop-color="#e0782a"/>
+        <stop offset="100%" stop-color="#c05e18"/>
       </radialGradient>
+      <radialGradient id="bellyG" cx="50%" cy="45%" r="55%">
+        <stop offset="0%" stop-color="#fff4e0"/>
+        <stop offset="100%" stop-color="#f5d0a0"/>
+      </radialGradient>
+      <radialGradient id="headG" cx="38%" cy="32%" r="65%">
+        <stop offset="0%" stop-color="#f5a850"/>
+        <stop offset="100%" stop-color="#c86018"/>
+      </radialGradient>
+      <filter id="starGlow">
+        <feGaussianBlur stdDeviation="1.2" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
     </defs>
-    <rect width="512" height="512" fill="url(#bg)"/>
-    <ellipse cx="256" cy="320" rx="165" ry="105" fill="#f0a0c0" opacity="0.15"/>
-    <path d="M 355 300 Q 400 355 375 385 Q 355 405 315 395 Q 295 388 305 372" stroke="#d08040" stroke-width="20" stroke-linecap="round" fill="none"/>
-    <path d="M 355 300 Q 400 355 375 385 Q 355 405 315 395 Q 295 388 305 372" stroke="#e09050" stroke-width="11" stroke-linecap="round" fill="none" opacity="0.5"/>
-    <ellipse cx="256" cy="328" rx="128" ry="88" fill="url(#bodyG)"/>
-    <ellipse cx="256" cy="342" rx="68" ry="52" fill="url(#bellyG)" opacity="0.82"/>
-    <path d="M 182 305 Q 202 285 222 298" stroke="#c07038" stroke-width="3" fill="none" opacity="0.45"/>
-    <path d="M 178 320 Q 198 300 218 313" stroke="#c07038" stroke-width="2.5" fill="none" opacity="0.4"/>
-    <path d="M 292 294 Q 312 278 332 293" stroke="#c07038" stroke-width="3" fill="none" opacity="0.45"/>
-    <path d="M 296 309 Q 316 293 336 308" stroke="#c07038" stroke-width="2.5" fill="none" opacity="0.4"/>
-    <polygon points="175,178 195,138 222,178" fill="#e89050"/>
-    <polygon points="180,175 198,148 217,175" fill="#f0a8a0" opacity="0.65"/>
-    <polygon points="292,178 314,138 335,178" fill="#e89050"/>
-    <polygon points="295,175 312,148 330,175" fill="#f0a8a0" opacity="0.65"/>
-    <ellipse cx="256" cy="234" rx="83" ry="78" fill="#e89050"/>
-    <path d="M 240 162 Q 256 157 272 162" stroke="#c07038" stroke-width="2.5" fill="none" opacity="0.55"/>
-    <path d="M 243 170 Q 256 165 269 170" stroke="#c07038" stroke-width="2" fill="none" opacity="0.45"/>
-    <ellipse cx="256" cy="258" rx="36" ry="26" fill="#fde8d8" opacity="0.85"/>
-    <ellipse cx="214" cy="252" rx="19" ry="11" fill="#f0a0c0" opacity="0.42"/>
-    <ellipse cx="298" cy="252" rx="19" ry="11" fill="#f0a0c0" opacity="0.42"/>
-    <path d="M 226 227 Q 237 220 248 227" stroke="#6a3a20" stroke-width="3" stroke-linecap="round" fill="none"/>
-    <path d="M 264 227 Q 275 220 286 227" stroke="#6a3a20" stroke-width="3" stroke-linecap="round" fill="none"/>
-    <line x1="229" y1="226" x2="227" y2="221" stroke="#6a3a20" stroke-width="1.5" stroke-linecap="round" opacity="0.55"/>
-    <line x1="237" y1="222" x2="236" y2="217" stroke="#6a3a20" stroke-width="1.5" stroke-linecap="round" opacity="0.55"/>
-    <line x1="266" y1="222" x2="265" y2="217" stroke="#6a3a20" stroke-width="1.5" stroke-linecap="round" opacity="0.55"/>
-    <line x1="274" y1="222" x2="273" y2="221" stroke="#6a3a20" stroke-width="1.5" stroke-linecap="round" opacity="0.55"/>
-    <ellipse cx="256" cy="250" rx="5" ry="4" fill="#e85d8a" opacity="0.78"/>
-    <path d="M 250 256 Q 256 261 262 256" stroke="#c06070" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.65"/>
-    <line x1="220" y1="252" x2="167" y2="245" stroke="#6a3a20" stroke-width="1.5" stroke-linecap="round" opacity="0.35"/>
-    <line x1="220" y1="258" x2="167" y2="258" stroke="#6a3a20" stroke-width="1.5" stroke-linecap="round" opacity="0.35"/>
-    <line x1="220" y1="264" x2="167" y2="269" stroke="#6a3a20" stroke-width="1.5" stroke-linecap="round" opacity="0.35"/>
-    <line x1="292" y1="252" x2="345" y2="245" stroke="#6a3a20" stroke-width="1.5" stroke-linecap="round" opacity="0.35"/>
-    <line x1="292" y1="258" x2="345" y2="258" stroke="#6a3a20" stroke-width="1.5" stroke-linecap="round" opacity="0.35"/>
-    <line x1="292" y1="264" x2="345" y2="269" stroke="#6a3a20" stroke-width="1.5" stroke-linecap="round" opacity="0.35"/>
-    <ellipse cx="218" cy="398" rx="32" ry="19" fill="#e89050"/>
-    <ellipse cx="290" cy="398" rx="32" ry="19" fill="#e89050"/>
-    <ellipse cx="207" cy="408" rx="6" ry="5" fill="#f0a0c0" opacity="0.68"/>
-    <ellipse cx="219" cy="411" rx="5" ry="4.5" fill="#f0a0c0" opacity="0.68"/>
-    <ellipse cx="231" cy="408" rx="5" ry="4" fill="#f0a0c0" opacity="0.68"/>
-    <ellipse cx="278" cy="408" rx="6" ry="5" fill="#f0a0c0" opacity="0.68"/>
-    <ellipse cx="290" cy="411" rx="5" ry="4.5" fill="#f0a0c0" opacity="0.68"/>
-    <ellipse cx="302" cy="408" rx="5" ry="4" fill="#f0a0c0" opacity="0.68"/>
+    <!-- Twilight sky -->
+    <rect width="512" height="512" fill="url(#sky)"/>
+    <!-- Stars -->
+    <g filter="url(#starGlow)" fill="white">
+      <circle cx="55" cy="42" r="1.8" opacity="0.9"/><circle cx="118" cy="22" r="2.2" opacity="0.95"/>
+      <circle cx="198" cy="55" r="1.2" opacity="0.8"/><circle cx="338" cy="28" r="1.6" opacity="0.9"/>
+      <circle cx="408" cy="52" r="2" opacity="0.95"/><circle cx="462" cy="18" r="1.2" opacity="0.8"/>
+      <circle cx="478" cy="78" r="1.6" opacity="0.85"/><circle cx="28" cy="95" r="1.2" opacity="0.75"/>
+      <circle cx="148" cy="88" r="1.5" opacity="0.85"/><circle cx="288" cy="48" r="1.2" opacity="0.8"/>
+      <circle cx="375" cy="82" r="1.2" opacity="0.8"/><circle cx="438" cy="108" r="1.5" opacity="0.85"/>
+      <circle cx="68" cy="148" r="1" opacity="0.7"/><circle cx="498" cy="148" r="1.2" opacity="0.75"/>
+      <circle cx="240" cy="32" r="1" opacity="0.75"/><circle cx="500" cy="55" r="1" opacity="0.7"/>
+    </g>
+    <!-- Crescent moon -->
+    <circle cx="432" cy="72" r="30" fill="url(#moonG)" opacity="0.95"/>
+    <circle cx="448" cy="62" r="26" fill="#3a1858"/>
+    <!-- Moon glow -->
+    <circle cx="432" cy="72" r="44" fill="#ffe090" opacity="0.08"/>
+    <!-- Dreamy ZZZ in background atmosphere -->
+    <text x="318" y="168" font-family="Georgia,serif" font-style="italic" font-weight="bold" font-size="30" fill="white" opacity="0.2" transform="rotate(-12,318,168)">z</text>
+    <text x="352" y="128" font-family="Georgia,serif" font-style="italic" font-weight="bold" font-size="42" fill="white" opacity="0.28" transform="rotate(-12,352,128)">Z</text>
+    <text x="396" y="82" font-family="Georgia,serif" font-style="italic" font-weight="bold" font-size="26" fill="white" opacity="0.18" transform="rotate(-12,396,82)">z</text>
+    <!-- Soft glow halo behind cat -->
+    <ellipse cx="256" cy="345" rx="185" ry="128" fill="url(#glow)"/>
+    <!-- Tail (draw behind body) -->
+    <path d="M 362 335 Q 415 375 398 415 Q 382 448 342 445 Q 312 442 305 428" stroke="#c06018" stroke-width="24" stroke-linecap="round" fill="none"/>
+    <path d="M 362 335 Q 415 375 398 415 Q 382 448 342 445 Q 312 442 305 428" stroke="#e07828" stroke-width="14" stroke-linecap="round" fill="none" opacity="0.55"/>
+    <ellipse cx="303" cy="430" rx="15" ry="11" fill="#e07828"/>
+    <!-- Body -->
+    <ellipse cx="252" cy="368" rx="132" ry="92" fill="url(#bodyG)"/>
+    <!-- Body tabby stripes -->
+    <path d="M 158 350 Q 178 333 200 348" stroke="#a04010" stroke-width="3.5" fill="none" opacity="0.5"/>
+    <path d="M 154 368 Q 174 352 196 367" stroke="#a04010" stroke-width="3" fill="none" opacity="0.42"/>
+    <path d="M 308 340 Q 330 324 352 340" stroke="#a04010" stroke-width="3.5" fill="none" opacity="0.5"/>
+    <path d="M 314 358 Q 336 342 358 358" stroke="#a04010" stroke-width="3" fill="none" opacity="0.42"/>
+    <!-- Belly -->
+    <ellipse cx="246" cy="382" rx="74" ry="60" fill="url(#bellyG)" opacity="0.88"/>
+    <!-- Ears (behind head) -->
+    <polygon points="172,215 194,165 228,215" fill="#e07828"/>
+    <polygon points="178,212 195,172 220,212" fill="#f5a0a0" opacity="0.65"/>
+    <polygon points="286,215 310,165 332,215" fill="#e07828"/>
+    <polygon points="290,212 308,172 326,212" fill="#f5a0a0" opacity="0.65"/>
+    <!-- Head -->
+    <circle cx="256" cy="262" r="90" fill="url(#headG)"/>
+    <!-- Forehead markings -->
+    <path d="M 228 188 Q 236 181 244 188" stroke="#a04010" stroke-width="2.5" fill="none" opacity="0.48"/>
+    <path d="M 248 184 Q 256 177 264 184" stroke="#a04010" stroke-width="2.5" fill="none" opacity="0.48"/>
+    <path d="M 268 188 Q 276 181 284 188" stroke="#a04010" stroke-width="2.5" fill="none" opacity="0.48"/>
+    <!-- Muzzle -->
+    <ellipse cx="256" cy="284" rx="40" ry="30" fill="#fff4e0" opacity="0.88"/>
+    <!-- Blush cheeks -->
+    <ellipse cx="210" cy="276" rx="23" ry="14" fill="#f0a0c0" opacity="0.42"/>
+    <ellipse cx="302" cy="276" rx="23" ry="14" fill="#f0a0c0" opacity="0.42"/>
+    <!-- Closed sleeping eyes -->
+    <path d="M 224 250 Q 237 239 250 250" stroke="#4a1a08" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+    <path d="M 262 250 Q 275 239 288 250" stroke="#4a1a08" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+    <!-- Lashes -->
+    <line x1="227" y1="249" x2="224" y2="243" stroke="#4a1a08" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+    <line x1="236" y1="242" x2="234" y2="236" stroke="#4a1a08" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+    <line x1="247" y1="246" x2="246" y2="240" stroke="#4a1a08" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+    <line x1="265" y1="246" x2="264" y2="240" stroke="#4a1a08" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+    <line x1="276" y1="242" x2="274" y2="236" stroke="#4a1a08" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+    <line x1="285" y1="249" x2="283" y2="243" stroke="#4a1a08" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+    <!-- Nose (heart-shaped) -->
+    <path d="M 249 276 Q 249 270 256 268 Q 263 270 263 276 L 256 283 Z" fill="#e85d8a" opacity="0.88"/>
+    <!-- Mouth -->
+    <path d="M 249 282 Q 256 290 263 282" stroke="#c04060" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.65"/>
+    <!-- Whiskers -->
+    <line x1="216" y1="278" x2="152" y2="266" stroke="#f5ddb0" stroke-width="1.5" stroke-linecap="round" opacity="0.55"/>
+    <line x1="216" y1="285" x2="152" y2="285" stroke="#f5ddb0" stroke-width="1.5" stroke-linecap="round" opacity="0.55"/>
+    <line x1="216" y1="292" x2="152" y2="300" stroke="#f5ddb0" stroke-width="1.5" stroke-linecap="round" opacity="0.55"/>
+    <line x1="296" y1="278" x2="360" y2="266" stroke="#f5ddb0" stroke-width="1.5" stroke-linecap="round" opacity="0.55"/>
+    <line x1="296" y1="285" x2="360" y2="285" stroke="#f5ddb0" stroke-width="1.5" stroke-linecap="round" opacity="0.55"/>
+    <line x1="296" y1="292" x2="360" y2="300" stroke="#f5ddb0" stroke-width="1.5" stroke-linecap="round" opacity="0.55"/>
+    <!-- Paws -->
+    <ellipse cx="200" cy="442" rx="36" ry="21" fill="#e07828"/>
+    <ellipse cx="302" cy="442" rx="36" ry="21" fill="#e07828"/>
+    <!-- Toe beans -->
+    <ellipse cx="187" cy="452" rx="7" ry="5.5" fill="#f5a0c0" opacity="0.7"/>
+    <ellipse cx="200" cy="456" rx="6.5" ry="5" fill="#f5a0c0" opacity="0.7"/>
+    <ellipse cx="213" cy="452" rx="6" ry="5" fill="#f5a0c0" opacity="0.7"/>
+    <ellipse cx="289" cy="452" rx="6" ry="5" fill="#f5a0c0" opacity="0.7"/>
+    <ellipse cx="302" cy="456" rx="6.5" ry="5" fill="#f5a0c0" opacity="0.7"/>
+    <ellipse cx="315" cy="452" rx="7" ry="5.5" fill="#f5a0c0" opacity="0.7"/>
+    <!-- Sparkle accents -->
+    <path d="M 88 225 L 92 215 L 96 225 L 106 229 L 96 233 L 92 243 L 88 233 L 78 229 Z" fill="white" opacity="0.35"/>
+    <path d="M 420 188 L 423 181 L 426 188 L 433 191 L 426 194 L 423 201 L 420 194 L 413 191 Z" fill="white" opacity="0.3"/>
+    <circle cx="60" cy="290" r="2" fill="#f5c2d4" opacity="0.5"/>
+    <circle cx="468" cy="260" r="2.5" fill="#f5c2d4" opacity="0.45"/>
+    <circle cx="475" cy="340" r="1.5" fill="white" opacity="0.4"/>
+    <circle cx="42" cy="370" r="1.5" fill="white" opacity="0.35"/>
   </svg>`;
   const img = document.getElementById('catImage');
   img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
   img.onerror = null;
-  // Set sleeping quote
+  // Speech bubble: engaging teaser
   const speech = document.getElementById('catSpeech');
-  if (speech) speech.innerHTML = '<em>z z z . . .</em>';
+  if (speech) speech.innerHTML = '<em style="color:var(--caramel);">Mochi is dreaming of you...</em>';
   // Hide game elements not relevant before login
   document.getElementById('statsGrid').style.display = 'none';
   document.getElementById('pollenPill').style.display = 'none';
   document.getElementById('hintBox').style.display = 'none';
   document.getElementById('bookmarkBtn').style.display = 'none';
   document.querySelector('.mood-section').style.display = 'none';
+  // Show sign-in engagement card
+  document.getElementById('loginPrompt').style.display = 'flex';
   // Single column for sleeping preview
   document.querySelector('.main-layout').classList.add('single-col');
   document.getElementById('decayWarning').classList.remove('visible');
