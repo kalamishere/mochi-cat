@@ -90,29 +90,6 @@
     box-shadow: 0 1px 0 0 #f0a0c0, 0 2px 6px var(--shadow);
   }
 
-  .score-display {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.85rem;
-    color: var(--caramel);
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 2px;
-  }
-
-  .score-number {
-    font-size: 1.6rem;
-    color: var(--rust);
-    font-weight: 700;
-    line-height: 1;
-  }
-
-  .level-badge {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.6rem;
-    color: var(--sage);
-    letter-spacing: 0.05em;
-  }
 
   .main-layout {
     width: 100%;
@@ -719,14 +696,12 @@
   <div class="header-right">
     <button onclick="openJournal()" class="header-btn" id="journalBtn" style="display:none;" title="Mochi's Journal">📖</button>
     <button onclick="openSettings()" class="header-btn" id="settingsBtn" style="display:none;" title="Settings">⚙️</button>
-    <button onclick="disconnect()" class="header-btn" id="disconnectBtn" style="display:none;" title="Sign out">😸</button>
     <div id="pollenPill" style="display:none;align-items:center;gap:5px;background:#ffe0ec;border:1.5px solid var(--warm-tan);border-radius:100px;padding:5px 11px;font-family:'Space Mono',monospace;font-size:0.68rem;color:var(--caramel);">
       <span>🌸</span><span id="pollenBalance">—</span><a href="https://enter.pollinations.ai" target="_blank" style="color:var(--rust);text-decoration:none;font-size:0.62rem;opacity:0.8;">top up ↗</a>
     </div>
-    <div class="score-display">
-      <span class="score-number" id="score">0</span>
-      <span>purr points</span>
-      <span class="level-badge" id="levelBadge"></span>
+    <div id="bondBadge" style="display:none;align-items:center;gap:8px;background:#ffd6e8;border:1.5px solid var(--warm-tan);border-radius:100px;padding:6px 16px;">
+      <span style="font-family:'Lora',serif;font-style:italic;font-size:0.95rem;color:var(--rust);white-space:nowrap;" id="bondTitle">Companion</span>
+      <span style="font-family:'Space Mono',monospace;font-size:0.58rem;color:var(--caramel);white-space:nowrap;" id="bondProgress">68% to Trusted One</span>
     </div>
   </div>
 </header>
@@ -911,6 +886,12 @@
     <div style="font-family:'Space Mono',monospace;font-size:0.6rem;color:var(--caramel);line-height:1.5;">
       🌸 = uses Pollen credits. Changes take effect on next pet.
     </div>
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--warm-tan);">
+      <button onclick="disconnect();closeSettings();" style="width:100%;padding:10px;border:1.5px solid var(--warm-tan);border-radius:10px;background:#fff5f8;color:var(--caramel);font-family:'Space Mono',monospace;font-size:0.72rem;cursor:pointer;transition:background 0.2s;"
+        onmouseover="this.style.background='#ffe0ec'" onmouseout="this.style.background='#fff5f8'">
+        Sign out &amp; forget key
+      </button>
+    </div>
   </div>
 </div>
 
@@ -1060,7 +1041,7 @@ function activateKey(key) {
   state.apiKey = key;
   document.getElementById('loginOverlay').classList.remove('visible');
   document.getElementById('loginPrompt').style.display = 'none';
-  document.getElementById('disconnectBtn').style.display = 'block';
+  document.getElementById('bondBadge').style.display = 'flex';
   document.getElementById('settingsBtn').style.display = 'block';
   document.getElementById('journalBtn').style.display = 'block';
   // Restore game UI
@@ -1069,7 +1050,6 @@ function activateKey(key) {
   document.getElementById('hintBox').style.display = '';
   document.getElementById('bookmarkBtn').style.display = '';
   document.querySelector('.mood-section').style.display = '';
-  document.querySelector('.score-display').style.display = '';
   document.querySelector('.main-layout').classList.remove('single-col');
   initModelSelectors();
   checkDailyLogin();
@@ -1098,7 +1078,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function disconnect() {
   try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
   state.apiKey = '';
-  document.getElementById('disconnectBtn').style.display = 'none';
+  document.getElementById('bondBadge').style.display = 'none';
   document.getElementById('settingsBtn').style.display = 'none';
   document.getElementById('journalBtn').style.display = 'none';
   document.getElementById('manualKeyInput').value = '';
@@ -1136,9 +1116,6 @@ function showSleepingPreview() {
   document.getElementById('hintBox').style.display = 'none';
   document.getElementById('bookmarkBtn').style.display = 'none';
   document.querySelector('.mood-section').style.display = 'none';
-  // Reset score display for new users
-  document.getElementById('score').textContent = '0';
-  document.querySelector('.score-display').style.display = 'none';
   // Single column for sleeping preview
   document.querySelector('.main-layout').classList.add('single-col');
   document.getElementById('decayWarning').classList.remove('visible');
@@ -1224,11 +1201,19 @@ function updateUI() {
   const lvl = getLevel();
   const lvlCfg = getLevelConfig();
 
-  document.getElementById('score').textContent = state.score.toLocaleString();
   document.getElementById('petCount').textContent = state.pets.toLocaleString();
   document.getElementById('streakCount').textContent = state.streak;
   document.getElementById('bestStreak').textContent = state.bestStreak;
-  document.getElementById('levelBadge').textContent = lvlCfg.title;
+
+  // Bond badge: level title + progress to next level
+  document.getElementById('bondTitle').textContent = lvlCfg.title;
+  const nextLvl = LEVELS[lvl]; // lvl is 1-based; LEVELS[lvl] is the next entry
+  if (nextLvl) {
+    const pct = Math.round((state.score - lvlCfg.points) / (nextLvl.points - lvlCfg.points) * 100);
+    document.getElementById('bondProgress').textContent = pct + '% to ' + nextLvl.title;
+  } else {
+    document.getElementById('bondProgress').textContent = 'max bond ✨';
+  }
 
   // Combo label with dynamic emoji
   const comboEmoji = state.streak >= 10 ? '💥' : state.streak >= 6 ? '🔥' : state.streak >= 3 ? '🌸' : '✨';
