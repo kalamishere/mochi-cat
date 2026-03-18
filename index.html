@@ -64,20 +64,22 @@
   }
 
   .header-btn {
-    padding: 6px 10px;
-    border-radius: 8px;
-    background: none;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: white;
     border: 1.5px solid var(--warm-tan);
-    font-family: 'Space Mono', monospace;
-    font-size: 0.65rem;
-    color: var(--caramel);
+    font-size: 1.3rem;
     cursor: pointer;
     transition: all 0.2s;
+    box-shadow: 0 2px 8px var(--shadow);
+    line-height: 1;
   }
 
   .header-btn:hover {
     border-color: var(--caramel);
-    color: var(--rust);
+    background: var(--cream);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px var(--shadow);
   }
 
   .score-display {
@@ -116,7 +118,6 @@
 
   @media (max-width: 640px) {
     .main-layout { grid-template-columns: 1fr; }
-    .header-btn { padding: 8px 12px; font-size: 0.7rem; }
   }
 
   .cat-panel {
@@ -707,8 +708,8 @@
   <div class="game-title">Mochi &mdash; The Cozy Cat</div>
   <div class="header-right">
     <button onclick="openJournal()" class="header-btn" id="journalBtn" style="display:none;" title="Mochi's Journal">📖</button>
-    <button onclick="openSettings()" class="header-btn" id="settingsBtn" style="display:none;" title="Settings">⚙</button>
-    <button onclick="disconnect()" class="header-btn" id="disconnectBtn" style="display:none;" title="Disconnect">🔌</button>
+    <button onclick="openSettings()" class="header-btn" id="settingsBtn" style="display:none;" title="Settings">⚙️</button>
+    <button onclick="disconnect()" class="header-btn" id="disconnectBtn" style="display:none;" title="Sign out">🔓</button>
     <div class="score-display">
       <span class="score-number" id="score">0</span>
       <span>purr points</span>
@@ -829,16 +830,18 @@
     <div class="settings-group">
       <label>💬 Text Model</label>
       <select id="textModelSelect" onchange="onModelChange('text', this.value)">
-        <optgroup label="── Free ──">
-          <option value="openai">openai — GPT-5 Mini</option>
-          <option value="mistral">mistral — Mistral Small 3.2</option>
-          <option value="gemini-fast">gemini-fast — Gemini 2.5 Flash Lite</option>
-          <option value="deepseek">deepseek — DeepSeek V3.2</option>
+        <optgroup label="── Free — Fast ──">
+          <option value="gemini-fast">gemini-fast — Gemini 2.5 Flash Lite (recommended)</option>
           <option value="nova-fast">nova-fast — Amazon Nova Micro</option>
-          <option value="claude-fast">claude-fast — Claude Haiku 4.5</option>
-          <option value="kimi">kimi — Moonshot Kimi K2.5</option>
-          <option value="glm">glm — Z.ai GLM-5 744B</option>
+          <option value="mistral">mistral — Mistral Small 3.2</option>
           <option value="gemini-search">gemini-search — Gemini + Google Search</option>
+        </optgroup>
+        <optgroup label="── Free — Slower ──">
+          <option value="claude-fast">claude-fast — Claude Haiku 4.5</option>
+          <option value="deepseek">deepseek — DeepSeek V3.2</option>
+          <option value="glm">glm — Z.ai GLM-5 744B</option>
+          <option value="kimi">kimi — Moonshot Kimi K2.5</option>
+          <option value="openai">openai — GPT-5 Mini</option>
         </optgroup>
         <optgroup label="── 🌸 Pollen Required ──">
           <option value="grok">grok — Grok 4 Fast 🌸</option>
@@ -853,15 +856,17 @@
     <div class="settings-group">
       <label>🖼 Image Model</label>
       <select id="imageModelSelect" onchange="onModelChange('image', this.value)">
-        <optgroup label="── Free ──">
+        <optgroup label="── Free — Fast ──">
           <option value="flux">flux — Flux Schnell (recommended)</option>
+          <option value="klein">klein — FLUX.2 Klein 4B</option>
           <option value="zimage">zimage — Z-Image Turbo (2x upscale)</option>
+        </optgroup>
+        <optgroup label="── Free — Slower ──">
           <option value="flux-2-dev">flux-2-dev — FLUX.2 Dev</option>
           <option value="dirtberry">dirtberry — Dirtberry (realistic)</option>
           <option value="dirtberry-pro">dirtberry-pro — Dirtberry Pro</option>
           <option value="imagen-4">imagen-4 — Google Imagen 4</option>
           <option value="grok-imagine">grok-imagine — Grok Imagine</option>
-          <option value="klein">klein — FLUX.2 Klein 4B</option>
         </optgroup>
         <optgroup label="── 🌸 Pollen Required ──">
           <option value="gptimage">gptimage — GPT Image 1 Mini 🌸</option>
@@ -989,7 +994,7 @@ function getLevel() {
 function getLevelConfig() { return LEVELS[getLevel() - 1]; }
 
 // ─── Models ───
-function getTextModel()  { const m = localStorage.getItem(TEXT_MODEL_KEY);  return m && VALID_TEXT_MODELS.includes(m)  ? m : 'openai'; }
+function getTextModel()  { const m = localStorage.getItem(TEXT_MODEL_KEY);  return m && VALID_TEXT_MODELS.includes(m)  ? m : 'gemini-fast'; }
 function getImageModel() { const m = localStorage.getItem(IMAGE_MODEL_KEY); return m && VALID_IMAGE_MODELS.includes(m) ? m : 'flux'; }
 
 function onModelChange(type, value) {
