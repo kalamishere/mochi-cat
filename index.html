@@ -47,6 +47,8 @@
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid var(--warm-tan);
+    flex-wrap: wrap;
+    gap: 8px;
   }
 
   .game-title {
@@ -61,6 +63,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
+    flex-wrap: wrap;
   }
 
   .header-btn {
@@ -287,7 +290,7 @@
   .mood-bar-fill {
     height: 100%;
     border-radius: 100px;
-    background: linear-gradient(90deg, var(--caramel), var(--sage));
+    background: linear-gradient(90deg, var(--caramel), var(--blush));
     transition: width 1s ease, background 1s ease;
   }
 
@@ -709,7 +712,7 @@
   <div class="header-right">
     <button onclick="openJournal()" class="header-btn" id="journalBtn" style="display:none;" title="Mochi's Journal">📖</button>
     <button onclick="openSettings()" class="header-btn" id="settingsBtn" style="display:none;" title="Settings">⚙️</button>
-    <button onclick="disconnect()" class="header-btn" id="disconnectBtn" style="display:none;" title="Sign out">🔓</button>
+    <button onclick="disconnect()" class="header-btn" id="disconnectBtn" style="display:none;" title="Sign out">😸</button>
     <div class="score-display">
       <span class="score-number" id="score">0</span>
       <span>purr points</span>
@@ -843,13 +846,15 @@
           <option value="kimi">kimi — Moonshot Kimi K2.5</option>
           <option value="openai">openai — GPT-5 Mini</option>
         </optgroup>
-        <optgroup label="── 🌸 Pollen Required ──">
+        <optgroup label="── 🌸 Pollen — Fast ──">
           <option value="grok">grok — Grok 4 Fast 🌸</option>
-          <option value="gemini">gemini — Gemini 3 Flash 🌸🌸</option>
-          <option value="openai-large">openai-large — GPT-5.2 🌸🌸</option>
           <option value="claude">claude — Claude Sonnet 4.6 🌸🌸</option>
-          <option value="gemini-large">gemini-large — Gemini 3.1 Pro 🌸🌸🌸</option>
           <option value="claude-large">claude-large — Claude Opus 4.6 🌸🌸🌸</option>
+          <option value="openai-large">openai-large — GPT-5.2 🌸🌸</option>
+        </optgroup>
+        <optgroup label="── 🌸 Pollen — Slower ──">
+          <option value="gemini-large">gemini-large — Gemini 3.1 Pro 🌸🌸🌸</option>
+          <option value="gemini">gemini — Gemini 3 Flash 🌸🌸</option>
         </optgroup>
       </select>
     </div>
@@ -973,11 +978,11 @@ const QUOTE_THEMES = [
 
 // ─── Mood config ───
 const moodLevels = [
-  { min: 0,  max: 20,  emoji: '😾', label: 'Grumpy and ignored',       color: '#c0392b' },
-  { min: 20, max: 40,  emoji: '😿', label: 'A bit sad...',              color: '#e67e22' },
-  { min: 40, max: 60,  emoji: '🐱', label: 'Indifferent. Pet me more.', color: '#d4ac0d' },
-  { min: 60, max: 80,  emoji: '😸', label: 'Pretty happy!',             color: '#27ae60' },
-  { min: 80, max: 101, emoji: '😻', label: 'In absolute bliss! Purrrr', color: '#8aad8a' },
+  { min: 0,  max: 20,  emoji: '😾', label: 'Grumpy and ignored',       color: '#a0522d' },
+  { min: 20, max: 40,  emoji: '😿', label: 'A bit sad...',              color: '#c97a4a' },
+  { min: 40, max: 60,  emoji: '🐱', label: 'Indifferent. Pet me more.', color: '#c9956a' },
+  { min: 60, max: 80,  emoji: '😸', label: 'Pretty happy!',             color: '#d4a574' },
+  { min: 80, max: 101, emoji: '😻', label: 'In absolute bliss! Purrrr', color: '#e8b88a' },
 ];
 
 function getMoodConfig() {
