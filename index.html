@@ -1439,14 +1439,18 @@ async function generateCatImage() {
   const seed = state.imageSeed++;
   const url = `https://gen.pollinations.ai/image/${prompt}?seed=${seed}&width=512&height=512&model=${getImageModel()}`;
 
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20000);
   try {
-    const imgRes = await fetch(url, { headers: { 'Authorization': 'Bearer ' + state.apiKey } });
+    const imgRes = await fetch(url, { headers: { 'Authorization': 'Bearer ' + state.apiKey }, signal: controller.signal });
+    clearTimeout(timeout);
     if (!imgRes.ok) throw new Error('image fetch failed');
     const blob = await imgRes.blob();
     const blobUrl = URL.createObjectURL(blob);
     if (img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
     img.src = blobUrl;
   } catch (e) {
+    clearTimeout(timeout);
     const fallbackSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
       <rect width="512" height="512" fill="#e8d5b7"/>
       <circle cx="256" cy="240" r="120" fill="#c9956a" opacity="0.2"/>
