@@ -24,7 +24,13 @@ Since itch.io runs games in a sandboxed iframe, the auth flow uses a [GitHub Pag
 
 ### Sign-in page (logged-out state)
 
-When not logged in, an illustrated sleeping orange tabby SVG is shown with the existing sleep overlay (animated Z Z z, "sign in to wake Mochi" button). On login, the overlay resets and the wake button reverts to `wakeMochi()` for the idle-sleep flow. No `loginPrompt` card — the sleep overlay handles both states.
+When not logged in, a twilight scene SVG is shown: deep purple-to-peach sky, crescent moon, starfield, sparkle accents, and a fully illustrated sleeping orange tabby (tabby stripes, blush, heart nose, whiskers, toe beans, curled tail). The sleep overlay (animated Z Z z + "sign in to wake Mochi" button) sits on top.
+
+Below the cat, two engagement cards are shown (the `#loginPrompt` div):
+- Tagline + pill CTA ("Wake Mochi Up") with free-account note
+- Bond progression teaser: Stranger → One With Mochi, 10 levels explained
+
+On login, the overlay resets (button text/onclick restored to `wakeMochi()`), `loginPrompt` hides, and the game UI shows. `image.pollinations.ai` is **not** used for the sign-in image — it now requires Turnstile and is unreliable without auth. The SVG is fully self-contained.
 
 ## Deploying to itch.io
 
