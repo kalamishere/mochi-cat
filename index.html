@@ -641,68 +641,58 @@
 </head>
 <body>
 
-<!-- Login Screen -->
-<div id="loginScreen" style="
-  position:fixed;inset:0;z-index:500;
-  background:var(--cream);
-  display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  padding:32px;
-  gap:28px;
-">
-  <div style="font-size:4rem;line-height:1;filter:drop-shadow(0 4px 12px rgba(61,35,20,0.15));">🐱</div>
-  <div style="text-align:center;">
-    <div style="font-family:'Lora',serif;font-style:italic;font-size:2.2rem;color:var(--rust);margin-bottom:8px;">Meet Mochi</div>
-    <div style="font-family:'Lora',serif;font-size:1rem;color:var(--deep);max-width:320px;line-height:1.75;margin:0 auto;">
-      She needs your attention — and a Pollinations account.<br>
-      Sign in to bring her to life. <em>It's free.</em>
+<!-- Login overlay (replaces old full-screen block) -->
+<div class="overlay" id="loginOverlay">
+  <div class="overlay-panel" style="max-width:400px;">
+    <div class="overlay-title">
+      <span>🐾 Wake Mochi Up</span>
+      <button class="overlay-close" onclick="closeLogin()">✕</button>
     </div>
-  </div>
 
-  <div style="display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;max-width:340px;">
-    <div style="font-family:'Space Mono',monospace;font-size:0.75rem;color:var(--caramel);letter-spacing:0.06em;text-transform:uppercase;">Step 1 — Open Pollinations</div>
-    <button id="connectBtn" onclick="connectPollinations()" style="
-      width:100%;display:flex;align-items:center;justify-content:center;gap:10px;
-      padding:14px 28px;border:none;border-radius:12px;
-      background:var(--rust);color:white;
-      font-family:'Space Mono',monospace;font-size:0.85rem;font-weight:700;
-      cursor:pointer;letter-spacing:0.04em;
-      box-shadow:0 4px 18px rgba(155,92,58,0.35);
-      transition:all 0.2s;
-    "
-    onmouseover="this.style.transform='translateY(-1px)'"
-    onmouseout="this.style.transform=''"
-    >
-      <span>🐾</span> Sign in with Pollinations
-    </button>
-    <div style="font-family:'Space Mono',monospace;font-size:0.72rem;color:var(--caramel);text-align:center;line-height:1.7;">
-      A new tab will open. Log in, then<br>copy the key shown on that page.
+    <div style="font-family:'Lora',serif;font-size:0.95rem;color:var(--deep);line-height:1.7;margin-bottom:16px;">
+      Mochi needs a free <strong>Pollinations</strong> account to come alive.
+      Sign in and you'll get a key to paste below.
     </div>
-  </div>
 
-  <div id="step2Box" style="width:100%;max-width:340px;display:flex;flex-direction:column;gap:8px;
-    border:2px solid var(--warm-tan);border-radius:14px;padding:16px;transition:all 0.3s;">
-    <div style="font-family:'Space Mono',monospace;font-size:0.75rem;color:var(--caramel);letter-spacing:0.06em;text-transform:uppercase;">Step 2 — Paste your key</div>
-    <input id="manualKeyInput" type="text" placeholder="sk_..." autocomplete="off" spellcheck="false" style="
-      width:100%;padding:11px 14px;
-      border:1.5px solid var(--caramel);border-radius:10px;
-      font-family:'Space Mono',monospace;font-size:0.8rem;
-      background:white;color:var(--deep);outline:none;
-      box-sizing:border-box;transition:border-color 0.2s;
-    " />
-    <button onclick="useManualKey()" style="
-      padding:12px;border:none;border-radius:10px;
-      background:var(--caramel);color:white;
-      font-family:'Space Mono',monospace;font-size:0.82rem;font-weight:700;
-      cursor:pointer;transition:background 0.2s;
-    "
-    onmouseover="this.style.background='var(--rust)'"
-    onmouseout="this.style.background='var(--caramel)'"
-    >
-      Let's go
-    </button>
-    <div id="keyError" style="font-family:'Space Mono',monospace;font-size:0.68rem;color:#c0392b;display:none;">
-      That doesn't look like a valid key (should start with sk_)
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div style="font-family:'Space Mono',monospace;font-size:0.68rem;color:var(--caramel);letter-spacing:0.06em;text-transform:uppercase;">Step 1 — Get your key</div>
+      <button id="connectBtn" onclick="connectPollinations()" style="
+        width:100%;display:flex;align-items:center;justify-content:center;gap:10px;
+        padding:14px 28px;border:none;border-radius:12px;
+        background:var(--rust);color:white;
+        font-family:'Space Mono',monospace;font-size:0.85rem;font-weight:700;
+        cursor:pointer;letter-spacing:0.04em;
+        box-shadow:0 4px 18px rgba(155,92,58,0.35);
+        transition:all 0.2s;
+      ">
+        <span>🐾</span> Sign in with Pollinations
+      </button>
+      <div style="font-family:'Space Mono',monospace;font-size:0.68rem;color:var(--caramel);text-align:center;line-height:1.6;">
+        A new tab opens. Log in (or sign up — it's free!),<br>then copy the key shown.
+      </div>
+    </div>
+
+    <div id="step2Box" style="display:flex;flex-direction:column;gap:8px;
+      border:2px solid var(--warm-tan);border-radius:14px;padding:16px;margin-top:16px;transition:all 0.3s;">
+      <div style="font-family:'Space Mono',monospace;font-size:0.68rem;color:var(--caramel);letter-spacing:0.06em;text-transform:uppercase;">Step 2 — Paste it here</div>
+      <input id="manualKeyInput" type="text" placeholder="sk_..." autocomplete="off" spellcheck="false" style="
+        width:100%;padding:11px 14px;
+        border:1.5px solid var(--caramel);border-radius:10px;
+        font-family:'Space Mono',monospace;font-size:0.8rem;
+        background:white;color:var(--deep);outline:none;
+        box-sizing:border-box;transition:border-color 0.2s;
+      " />
+      <button onclick="useManualKey()" style="
+        padding:12px;border:none;border-radius:10px;
+        background:var(--caramel);color:white;
+        font-family:'Space Mono',monospace;font-size:0.82rem;font-weight:700;
+        cursor:pointer;transition:background 0.2s;
+      ">
+        Wake her up!
+      </button>
+      <div id="keyError" style="font-family:'Space Mono',monospace;font-size:0.68rem;color:#a0522d;display:none;">
+        That doesn't look right — keys start with sk_ or pk_
+      </div>
     </div>
   </div>
 </div>
@@ -761,7 +751,7 @@
       </div>
     </div>
 
-    <div class="stats-grid">
+    <div class="stats-grid" id="statsGrid">
       <div class="stat-card">
         <div class="stat-label">🐾 Scritches</div>
         <div class="stat-value" id="petCount">0</div>
@@ -781,7 +771,7 @@
     </div>
 
     <!-- Pollen balance (simplified) -->
-    <div style="
+    <div id="pollenRow" style="
       background:white;border:1.5px solid var(--warm-tan);border-radius:14px;
       padding:14px 18px;box-shadow:0 2px 8px var(--shadow);
       display:flex;align-items:center;justify-content:space-between;gap:12px;
@@ -805,6 +795,41 @@
     <div class="hint-box" id="hintBox">
       <strong>Pet Mochi</strong> to earn Purr Points! 🐾<br>
       Keep petting to build combos &amp; bonus points.
+    </div>
+
+    <!-- Login prompt (shown when not connected) -->
+    <div id="loginPrompt" style="display:none;cursor:pointer;" onclick="openLogin()">
+      <div style="
+        background: white;
+        border: 2px solid var(--warm-tan);
+        border-radius: 16px;
+        padding: 20px 24px;
+        text-align: center;
+        box-shadow: 0 4px 20px var(--shadow);
+        transition: all 0.2s;
+        margin-top: 8px;
+      "
+      onmouseover="this.style.transform='translateY(-2px)';this.style.borderColor='var(--caramel)'"
+      onmouseout="this.style.transform='';this.style.borderColor='var(--warm-tan)'"
+      >
+        <div style="font-size:2rem;margin-bottom:8px;">😴</div>
+        <div style="font-family:'Lora',serif;font-style:italic;font-size:1.2rem;color:var(--rust);margin-bottom:6px;">
+          Mochi is sleeping...
+        </div>
+        <div style="font-family:'Lora',serif;font-size:0.9rem;color:var(--deep);line-height:1.6;margin-bottom:12px;">
+          Sign in to wake her up and start playing!<br>
+          <em style="color:var(--caramel);">Free Pollinations account required</em>
+        </div>
+        <div style="
+          display:inline-flex;align-items:center;gap:8px;
+          padding:12px 24px;border-radius:12px;
+          background:var(--rust);color:white;
+          font-family:'Space Mono',monospace;font-size:0.82rem;font-weight:700;
+          box-shadow:0 4px 16px rgba(155,92,58,0.3);
+        ">
+          🐾 Wake Mochi Up
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1035,10 +1060,18 @@ function activateKey(key) {
   document.getElementById('keyError').style.display = 'none';
   try { localStorage.setItem(STORAGE_KEY, key); } catch(e) {}
   state.apiKey = key;
-  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('loginOverlay').classList.remove('visible');
+  document.getElementById('loginPrompt').style.display = 'none';
   document.getElementById('disconnectBtn').style.display = 'block';
   document.getElementById('settingsBtn').style.display = 'block';
   document.getElementById('journalBtn').style.display = 'block';
+  // Restore game UI
+  document.getElementById('statsGrid').style.display = '';
+  document.getElementById('pollenRow').style.display = '';
+  document.getElementById('hintBox').style.display = '';
+  document.getElementById('bookmarkBtn').style.display = '';
+  document.querySelector('.mood-section').style.display = '';
+  document.querySelector('.score-display').style.display = '';
   initModelSelectors();
   checkDailyLogin();
   fetchPollenBalance();
@@ -1070,7 +1103,38 @@ function disconnect() {
   document.getElementById('settingsBtn').style.display = 'none';
   document.getElementById('journalBtn').style.display = 'none';
   document.getElementById('manualKeyInput').value = '';
-  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginPrompt').style.display = 'block';
+  showSleepingPreview();
+}
+
+function closeLogin() {
+  document.getElementById('loginOverlay').classList.remove('visible');
+}
+
+function openLogin() {
+  document.getElementById('loginOverlay').classList.add('visible');
+  setTimeout(() => document.getElementById('manualKeyInput').focus(), 300);
+}
+
+function showSleepingPreview() {
+  // Show sleeping Mochi using free image API (no auth needed)
+  const prompt = encodeURIComponent('cute fluffy orange tabby cat sleeping peacefully curled up, cozy living room, warm blanket, soft warm lighting, painterly illustration style, no text, no humans');
+  const img = document.getElementById('catImage');
+  img.src = 'https://image.pollinations.ai/prompt/' + prompt + '?seed=42&width=512&height=512&model=flux&nologo=true';
+  // Set sleeping quote
+  const speech = document.getElementById('catSpeech');
+  if (speech) speech.innerHTML = '<em>z z z . . .</em>';
+  // Hide game elements not relevant before login
+  document.getElementById('statsGrid').style.display = 'none';
+  document.getElementById('pollenRow').style.display = 'none';
+  document.getElementById('hintBox').style.display = 'none';
+  document.getElementById('bookmarkBtn').style.display = 'none';
+  document.querySelector('.mood-section').style.display = 'none';
+  // Reset score display for new users
+  document.getElementById('score').textContent = '0';
+  document.querySelector('.score-display').style.display = 'none';
+  // Fallback if image can't load (e.g. CORS on localhost)
+  img.onerror = () => { img.src = 'https://placehold.co/512x512/e8d5b7/9b5c3a?text=zzz...+Mochi'; };
 }
 
 function initAuth() {
@@ -1079,7 +1143,9 @@ function initAuth() {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) { activateKey(stored); return; }
   } catch(e) {}
-  document.getElementById('loginScreen').style.display = 'flex';
+  // Not logged in — show sleeping Mochi preview
+  document.getElementById('loginPrompt').style.display = 'block';
+  showSleepingPreview();
 }
 
 // ─── Persistence ───
@@ -1321,8 +1387,11 @@ function wakeMochi() {
 }
 
 function handleCatClick(event) {
+  if (!state.apiKey) {
+    openLogin();
+    return;
+  }
   if (state.sleepStage === 'deep' || state.sleepStage === 'napping') {
-    // Click on sleep overlay wakes Mochi
     wakeMochi();
   } else {
     petTheCat(event);
