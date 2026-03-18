@@ -119,6 +119,8 @@
     align-items: start;
   }
 
+  .main-layout.single-col { grid-template-columns: 1fr; max-width: 520px; }
+
   @media (max-width: 640px) {
     .main-layout { grid-template-columns: 1fr; }
   }
@@ -1072,6 +1074,7 @@ function activateKey(key) {
   document.getElementById('bookmarkBtn').style.display = '';
   document.querySelector('.mood-section').style.display = '';
   document.querySelector('.score-display').style.display = '';
+  document.querySelector('.main-layout').classList.remove('single-col');
   initModelSelectors();
   checkDailyLogin();
   fetchPollenBalance();
@@ -1133,6 +1136,9 @@ function showSleepingPreview() {
   // Reset score display for new users
   document.getElementById('score').textContent = '0';
   document.querySelector('.score-display').style.display = 'none';
+  // Single column for sleeping preview
+  document.querySelector('.main-layout').classList.add('single-col');
+  document.getElementById('decayWarning').classList.remove('visible');
   // Fallback if image can't load (e.g. CORS on localhost)
   img.onerror = () => { img.src = 'https://placehold.co/512x512/e8d5b7/9b5c3a?text=zzz...+Mochi'; };
 }
@@ -1237,7 +1243,7 @@ function updateUI() {
 
   // Decay warning
   const warn = document.getElementById('decayWarning');
-  if (state.sleepStage) {
+  if (!state.apiKey || state.sleepStage) {
     warn.classList.remove('visible');
   } else if (idleSecs > 15 && state.mood < 60) {
     warn.textContent = state.mood < 35 ? '😿 Mochi is getting lonely!' : 'Mochi could use some pets~';
