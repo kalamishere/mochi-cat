@@ -542,10 +542,14 @@
         >Top up ↗</a>
       </div>
 
-      <!-- Model selectors -->
+      <!-- Model selectors (collapsible) -->
       <div style="border-top:1px solid var(--warm-tan);padding-top:12px;display:flex;flex-direction:column;gap:8px;">
-        <div style="font-family:'Space Mono',monospace;font-size:0.65rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--caramel);">AI Models</div>
+        <div onclick="toggleModels()" style="font-family:'Space Mono',monospace;font-size:0.65rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--caramel);cursor:pointer;display:flex;align-items:center;justify-content:space-between;">
+          <span>AI Models</span>
+          <span id="modelToggle" style="font-size:0.7rem;transition:transform 0.2s;">&#9662;</span>
+        </div>
 
+        <div id="modelSelectors" style="display:none;flex-direction:column;gap:8px;">
         <!-- Text model -->
         <div style="display:flex;align-items:center;gap:8px;">
           <span style="font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--caramel);width:40px;">💬</span>
@@ -610,6 +614,7 @@
         <div id="modelNote" style="font-family:'Space Mono',monospace;font-size:0.6rem;color:var(--caramel);line-height:1.5;display:none;">
           🌸 = uses Pollen credits. Changes take effect on next pet.
         </div>
+        </div><!-- /modelSelectors -->
       </div>
     </div>
 
@@ -617,23 +622,6 @@
       <strong>Pet Mochi</strong> to earn Purr Points! 🐾<br>
       Keep petting to build streaks &amp; bonus points.<br>
       Don't neglect her — mood decays over time!
-    </div>
-
-    <!-- Debug panel — remove before release -->
-    <div id="debugPanel" style="
-      background:white;border:1.5px solid var(--warm-tan);border-radius:12px;
-      padding:12px 14px;font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--caramel);
-    ">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <span style="text-transform:uppercase;letter-spacing:0.08em;">🔧 API Debug</span>
-        <button onclick="runApiTest()" style="
-          padding:4px 10px;background:var(--rust);color:white;border:none;
-          border-radius:6px;font-family:'Space Mono',monospace;font-size:0.65rem;cursor:pointer;
-        ">Test API</button>
-      </div>
-      <div id="debugOutput" style="color:var(--deep);line-height:1.6;word-break:break-all;">
-        Press Test API to check connection
-      </div>
     </div>
   </div>
 
@@ -1092,65 +1080,13 @@ setInterval(() => {
   }
 }, DECAY_INTERVAL_MS);
 
-// - Debug -
-async function runApiTest() {
-  const out = document.getElementById('debugOutput');
-  out.style.whiteSpace = 'pre-wrap';
-  out.textContent = 'Testing...';
-
-  if (!state.apiKey) {
-    out.textContent = '[ERR] No API key stored';
-    return;
-  }
-
-  const model = getTextModel();
-  const results = [];
-
-  // Test 1: POST /v1/chat/completions
-  out.textContent = `Testing POST /v1/chat/completions (${model})...`;
-  try {
-    const res = await fetch('https://gen.pollinations.ai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + state.apiKey },
-      body: JSON.stringify({
-        model: model,
-        messages: [
-          { role: 'system', content: 'You are a cat. Say one short sentence.' },
-          { role: 'user', content: 'Hello' }
-        ],
-        max_tokens: 2000,
-        temperature: 0.9,
-        seed: -1,
-      })
-    });
-    const raw = await res.text();
-    results.push(`[POST /v1/chat/completions] ${res.status}\nRAW: ${raw.slice(0, 500)}`);
-    if (res.ok) {
-      const data = JSON.parse(raw);
-      const content = data?.choices?.[0]?.message?.content;
-      const refusal = data?.choices?.[0]?.message?.refusal;
-      const role = data?.choices?.[0]?.message?.role;
-      const finish = data?.choices?.[0]?.finish_reason;
-      results.push(`content: ${JSON.stringify(content)}\nrefusal: ${JSON.stringify(refusal)}\nrole: ${role}, finish: ${finish}`);
-    }
-  } catch(e) {
-    results.push(`[POST] Error: ${e.message}`);
-  }
-
-  // Test 2: GET /text/ endpoint (simpler, may work differently)
-  out.textContent = `Testing GET /text/ (${model})...`;
-  try {
-    const textUrl = `https://gen.pollinations.ai/text/${encodeURIComponent('You are a cat. Say meow.')}?model=${model}&seed=-1`;
-    const res2 = await fetch(textUrl, {
-      headers: { 'Authorization': 'Bearer ' + state.apiKey }
-    });
-    const raw2 = await res2.text();
-    results.push(`\n[GET /text/] ${res2.status}\nRAW: ${raw2.slice(0, 300)}`);
-  } catch(e) {
-    results.push(`\n[GET /text/] Error: ${e.message}`);
-  }
-
-  out.textContent = results.join('\n');
+// - UI: collapsible model selectors -
+function toggleModels() {
+  const el = document.getElementById('modelSelectors');
+  const arrow = document.getElementById('modelToggle');
+  const open = el.style.display === 'flex';
+  el.style.display = open ? 'none' : 'flex';
+  arrow.style.transform = open ? '' : 'rotate(180deg)';
 }
 
 // - Init -

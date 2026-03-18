@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Mochi API Test</title>
+<style>
+  body { font-family: monospace; background: #faf6f0; color: #3d2314; padding: 32px; max-width: 700px; margin: 0 auto; }
+  h2 { color: #9b5c3a; }
+  label { display: block; margin: 12px 0 4px; font-size: 0.8rem; color: #c9956a; text-transform: uppercase; letter-spacing: 0.08em; }
+  input, select { width: 100%; padding: 8px 10px; border: 1.5px solid #c9956a; border-radius: 8px; font-family: monospace; font-size: 0.85rem; box-sizing: border-box; }
+  button { margin-top: 16px; padding: 10px 20px; background: #9b5c3a; color: white; border: none; border-radius: 10px; font-family: monospace; cursor: pointer; }
+  pre { background: white; border: 1.5px solid #e8d5b7; border-radius: 10px; padding: 16px; white-space: pre-wrap; word-break: break-all; font-size: 0.78rem; line-height: 1.6; margin-top: 16px; min-height: 80px; }
+</style>
+</head>
+<body>
+<h2>Mochi API Debug Tool</h2>
+<p style="font-size:0.8rem;color:#c9956a;">Standalone test page for the Pollinations API. Not shipped with the game.</p>
+
+<label>API Key</label>
+<input id="apiKey" type="text" placeholder="sk_..." />
+
+<label>Text Model</label>
+<select id="model">
+  <option value="openai">openai — GPT-5 Mini</option>
+  <option value="mistral">mistral — Mistral Small 3.2</option>
+  <option value="gemini-fast">gemini-fast — Gemini 2.5 Flash Lite</option>
+  <option value="deepseek">deepseek — DeepSeek V3.2</option>
+  <option value="nova-fast">nova-fast — Amazon Nova Micro</option>
+  <option value="claude-fast">claude-fast — Claude Haiku 4.5</option>
+  <option value="kimi">kimi — Moonshot Kimi K2.5</option>
+  <option value="glm">glm — Z.ai GLM-5 744B</option>
+  <option value="gemini-search">gemini-search — Gemini + Google Search</option>
+  <option value="grok">grok — Grok 4 Fast</option>
+  <option value="gemini">gemini — Gemini 3 Flash</option>
+  <option value="openai-large">openai-large — GPT-5.2</option>
+  <option value="claude">claude — Claude Sonnet 4.6</option>
+  <option value="gemini-large">gemini-large — Gemini 3.1 Pro</option>
+  <option value="claude-large">claude-large — Claude Opus 4.6</option>
+</select>
+
+<button onclick="runTest()">Test API</button>
+
+<pre id="output">Press Test API to check connection</pre>
+
+<script>
+async function runTest() {
+  const out = document.getElementById('output');
+  const apiKey = document.getElementById('apiKey').value.trim();
+  const model = document.getElementById('model').value;
+
+  if (!apiKey) { out.textContent = '[ERR] Enter an API key'; return; }
+
+  const results = [];
+  out.textContent = `Testing POST /v1/chat/completions (${model})...`;
+
+  try {
+    const res = await fetch('https://gen.pollinations.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+      body: JSON.stringify({
+        model: model,
+        messages: [
+          { role: 'system', content: 'You are Mochi, an eccentric orange cat philosopher. Under 25 words.' },
+          { role: 'user', content: 'Share a thought.' }
+        ],
+        max_tokens: 2000,
+        temperature: 0.95,
+        seed: -1,
+      })
+    });
+    const raw = await res.text();
+    results.push(`[POST /v1/chat/completions] ${res.status}\nRAW: ${raw.slice(0, 600)}`);
+    if (res.ok) {
+      const data = JSON.parse(raw);
+      const content = data?.choices?.[0]?.message?.content;
+      const refusal = data?.choices?.[0]?.message?.refusal;
+      const finish = data?.choices?.[0]?.finish_reason;
+      results.push(`\ncontent: ${JSON.stringify(content)}\nrefusal: ${JSON.stringify(refusal)}\nfinish_reason: ${finish}`);
+    }
+  } catch(e) {
+    results.push(`[POST] Error: ${e.message}`);
+  }
+
+  try {
+    const textUrl = `https://gen.pollinations.ai/text/${encodeURIComponent('You are a cat. Say meow.')}?model=${model}&seed=-1`;
+    const res2 = await fetch(textUrl, { headers: { 'Authorization': 'Bearer ' + apiKey } });
+    const raw2 = await res2.text();
+    results.push(`\n[GET /text/] ${res2.status}\nRAW: ${raw2.slice(0, 300)}`);
+  } catch(e) {
+    results.push(`\n[GET /text/] Error: ${e.message}`);
+  }
+
+  out.textContent = results.join('\n');
+}
+</script>
+</body>
+</html>
