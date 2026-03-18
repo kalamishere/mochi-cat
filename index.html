@@ -696,12 +696,12 @@
   <div class="header-right">
     <button onclick="openJournal()" class="header-btn" id="journalBtn" style="display:none;" title="Mochi's Journal">📖</button>
     <button onclick="openSettings()" class="header-btn" id="settingsBtn" style="display:none;" title="Settings">⚙️</button>
-    <div id="pollenPill" style="display:none;align-items:center;gap:5px;background:#ffe0ec;border:1.5px solid var(--warm-tan);border-radius:100px;padding:5px 11px;font-family:'Space Mono',monospace;font-size:0.68rem;color:var(--caramel);">
-      <span>🌸</span><span id="pollenBalance">—</span><a href="https://enter.pollinations.ai" target="_blank" style="color:var(--rust);text-decoration:none;font-size:0.62rem;opacity:0.8;">top up ↗</a>
+    <div id="pollenPill" style="display:none;align-items:center;gap:6px;height:28px;background:#fff0f6;border:1.5px solid var(--warm-tan);border-radius:100px;padding:0 12px;font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--caramel);white-space:nowrap;">
+      <span style="font-size:0.85rem;line-height:1;">🌸</span><span id="pollenBalance">—</span><a href="https://enter.pollinations.ai" target="_blank" style="color:var(--rust);text-decoration:none;font-size:0.65rem;opacity:0.75;">top up ↗</a>
     </div>
-    <div id="bondBadge" style="display:none;align-items:center;gap:8px;background:#ffd6e8;border:1.5px solid var(--warm-tan);border-radius:100px;padding:6px 16px;">
-      <span style="font-family:'Lora',serif;font-style:italic;font-size:0.95rem;color:var(--rust);white-space:nowrap;" id="bondTitle">Companion</span>
-      <span style="font-family:'Space Mono',monospace;font-size:0.58rem;color:var(--caramel);white-space:nowrap;" id="bondProgress">68% to Trusted One</span>
+    <div id="bondBadge" style="display:none;align-items:center;gap:7px;height:28px;background:#ffc8de;border:1.5px solid var(--warm-tan);border-radius:100px;padding:0 14px;white-space:nowrap;">
+      <span style="font-family:'Lora',serif;font-style:italic;font-size:0.85rem;color:var(--rust);line-height:1;" id="bondTitle">Companion</span>
+      <span style="font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--caramel);line-height:1;" id="bondProgress">68% to Trusted One</span>
     </div>
   </div>
 </header>
@@ -1040,7 +1040,10 @@ function activateKey(key) {
   try { localStorage.setItem(STORAGE_KEY, key); } catch(e) {}
   state.apiKey = key;
   document.getElementById('loginOverlay').classList.remove('visible');
-  document.getElementById('loginPrompt').style.display = 'none';
+  // Restore wake button for sleep mode (was overridden for login state)
+  const wakeBtn = document.querySelector('.sleep-wake-btn');
+  if (wakeBtn) { wakeBtn.textContent = 'wake Mochi up'; wakeBtn.onclick = function(e) { e.stopPropagation(); wakeMochi(); }; }
+  document.getElementById('sleepOverlay').classList.remove('visible');
   document.getElementById('bondBadge').style.display = 'flex';
   document.getElementById('settingsBtn').style.display = 'block';
   document.getElementById('journalBtn').style.display = 'block';
@@ -1082,7 +1085,6 @@ function disconnect() {
   document.getElementById('settingsBtn').style.display = 'none';
   document.getElementById('journalBtn').style.display = 'none';
   document.getElementById('manualKeyInput').value = '';
-  document.getElementById('loginPrompt').style.display = 'block';
   showSleepingPreview();
 }
 
@@ -1096,13 +1098,65 @@ function openLogin() {
 }
 
 function showSleepingPreview() {
-  // Use inline SVG so no network request needed (works everywhere including itch.io)
+  // Illustrated sleeping orange tabby — inline SVG, no network request needed
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-    <rect width="512" height="512" fill="#e8d5b7"/>
-    <circle cx="256" cy="230" r="110" fill="#c9956a" opacity="0.25"/>
-    <text x="256" y="210" font-size="110" text-anchor="middle" dominant-baseline="middle" font-family="Georgia,serif" fill="#9b5c3a" opacity="0.9">😴</text>
-    <text x="256" y="330" font-size="38" text-anchor="middle" font-family="monospace" fill="#9b5c3a" letter-spacing="18" font-style="italic">z z z</text>
-    <text x="256" y="390" font-size="20" text-anchor="middle" font-family="monospace" fill="#c9956a" letter-spacing="3">tap to wake mochi up</text>
+    <defs>
+      <radialGradient id="bg" cx="50%" cy="55%" r="75%">
+        <stop offset="0%" stop-color="#fce4ed"/>
+        <stop offset="60%" stop-color="#f5c2d4"/>
+        <stop offset="100%" stop-color="#e8a0c0"/>
+      </radialGradient>
+      <radialGradient id="bodyG" cx="40%" cy="40%" r="60%">
+        <stop offset="0%" stop-color="#f0a060"/>
+        <stop offset="100%" stop-color="#c97040"/>
+      </radialGradient>
+      <radialGradient id="bellyG" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#fde8d8"/>
+        <stop offset="100%" stop-color="#f5c8a8"/>
+      </radialGradient>
+    </defs>
+    <rect width="512" height="512" fill="url(#bg)"/>
+    <ellipse cx="256" cy="320" rx="165" ry="105" fill="#f0a0c0" opacity="0.15"/>
+    <path d="M 355 300 Q 400 355 375 385 Q 355 405 315 395 Q 295 388 305 372" stroke="#d08040" stroke-width="20" stroke-linecap="round" fill="none"/>
+    <path d="M 355 300 Q 400 355 375 385 Q 355 405 315 395 Q 295 388 305 372" stroke="#e09050" stroke-width="11" stroke-linecap="round" fill="none" opacity="0.5"/>
+    <ellipse cx="256" cy="328" rx="128" ry="88" fill="url(#bodyG)"/>
+    <ellipse cx="256" cy="342" rx="68" ry="52" fill="url(#bellyG)" opacity="0.82"/>
+    <path d="M 182 305 Q 202 285 222 298" stroke="#c07038" stroke-width="3" fill="none" opacity="0.45"/>
+    <path d="M 178 320 Q 198 300 218 313" stroke="#c07038" stroke-width="2.5" fill="none" opacity="0.4"/>
+    <path d="M 292 294 Q 312 278 332 293" stroke="#c07038" stroke-width="3" fill="none" opacity="0.45"/>
+    <path d="M 296 309 Q 316 293 336 308" stroke="#c07038" stroke-width="2.5" fill="none" opacity="0.4"/>
+    <polygon points="175,178 195,138 222,178" fill="#e89050"/>
+    <polygon points="180,175 198,148 217,175" fill="#f0a8a0" opacity="0.65"/>
+    <polygon points="292,178 314,138 335,178" fill="#e89050"/>
+    <polygon points="295,175 312,148 330,175" fill="#f0a8a0" opacity="0.65"/>
+    <ellipse cx="256" cy="234" rx="83" ry="78" fill="#e89050"/>
+    <path d="M 240 162 Q 256 157 272 162" stroke="#c07038" stroke-width="2.5" fill="none" opacity="0.55"/>
+    <path d="M 243 170 Q 256 165 269 170" stroke="#c07038" stroke-width="2" fill="none" opacity="0.45"/>
+    <ellipse cx="256" cy="258" rx="36" ry="26" fill="#fde8d8" opacity="0.85"/>
+    <ellipse cx="214" cy="252" rx="19" ry="11" fill="#f0a0c0" opacity="0.42"/>
+    <ellipse cx="298" cy="252" rx="19" ry="11" fill="#f0a0c0" opacity="0.42"/>
+    <path d="M 226 227 Q 237 220 248 227" stroke="#6a3a20" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <path d="M 264 227 Q 275 220 286 227" stroke="#6a3a20" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <line x1="229" y1="226" x2="227" y2="221" stroke="#6a3a20" stroke-width="1.5" stroke-linecap="round" opacity="0.55"/>
+    <line x1="237" y1="222" x2="236" y2="217" stroke="#6a3a20" stroke-width="1.5" stroke-linecap="round" opacity="0.55"/>
+    <line x1="266" y1="222" x2="265" y2="217" stroke="#6a3a20" stroke-width="1.5" stroke-linecap="round" opacity="0.55"/>
+    <line x1="274" y1="222" x2="273" y2="221" stroke="#6a3a20" stroke-width="1.5" stroke-linecap="round" opacity="0.55"/>
+    <ellipse cx="256" cy="250" rx="5" ry="4" fill="#e85d8a" opacity="0.78"/>
+    <path d="M 250 256 Q 256 261 262 256" stroke="#c06070" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.65"/>
+    <line x1="220" y1="252" x2="167" y2="245" stroke="#6a3a20" stroke-width="1.5" stroke-linecap="round" opacity="0.35"/>
+    <line x1="220" y1="258" x2="167" y2="258" stroke="#6a3a20" stroke-width="1.5" stroke-linecap="round" opacity="0.35"/>
+    <line x1="220" y1="264" x2="167" y2="269" stroke="#6a3a20" stroke-width="1.5" stroke-linecap="round" opacity="0.35"/>
+    <line x1="292" y1="252" x2="345" y2="245" stroke="#6a3a20" stroke-width="1.5" stroke-linecap="round" opacity="0.35"/>
+    <line x1="292" y1="258" x2="345" y2="258" stroke="#6a3a20" stroke-width="1.5" stroke-linecap="round" opacity="0.35"/>
+    <line x1="292" y1="264" x2="345" y2="269" stroke="#6a3a20" stroke-width="1.5" stroke-linecap="round" opacity="0.35"/>
+    <ellipse cx="218" cy="398" rx="32" ry="19" fill="#e89050"/>
+    <ellipse cx="290" cy="398" rx="32" ry="19" fill="#e89050"/>
+    <ellipse cx="207" cy="408" rx="6" ry="5" fill="#f0a0c0" opacity="0.68"/>
+    <ellipse cx="219" cy="411" rx="5" ry="4.5" fill="#f0a0c0" opacity="0.68"/>
+    <ellipse cx="231" cy="408" rx="5" ry="4" fill="#f0a0c0" opacity="0.68"/>
+    <ellipse cx="278" cy="408" rx="6" ry="5" fill="#f0a0c0" opacity="0.68"/>
+    <ellipse cx="290" cy="411" rx="5" ry="4.5" fill="#f0a0c0" opacity="0.68"/>
+    <ellipse cx="302" cy="408" rx="5" ry="4" fill="#f0a0c0" opacity="0.68"/>
   </svg>`;
   const img = document.getElementById('catImage');
   img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
@@ -1119,7 +1173,12 @@ function showSleepingPreview() {
   // Single column for sleeping preview
   document.querySelector('.main-layout').classList.add('single-col');
   document.getElementById('decayWarning').classList.remove('visible');
-  document.getElementById('sleepOverlay').classList.remove('visible');
+  // Show sleep overlay with login action
+  const overlay = document.getElementById('sleepOverlay');
+  const wakeBtn = overlay.querySelector('.sleep-wake-btn');
+  wakeBtn.textContent = 'sign in to wake Mochi';
+  wakeBtn.onclick = function(e) { e.stopPropagation(); openLogin(); };
+  overlay.classList.add('visible');
   img.style.filter = '';
 }
 
@@ -1129,8 +1188,7 @@ function initAuth() {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) { activateKey(stored); return; }
   } catch(e) {}
-  // Not logged in — show sleeping Mochi preview
-  document.getElementById('loginPrompt').style.display = 'block';
+  // Not logged in — show sleeping Mochi preview with sleep overlay login action
   showSleepingPreview();
 }
 
@@ -1212,7 +1270,7 @@ function updateUI() {
     const pct = Math.round((state.score - lvlCfg.points) / (nextLvl.points - lvlCfg.points) * 100);
     document.getElementById('bondProgress').textContent = pct + '% to ' + nextLvl.title;
   } else {
-    document.getElementById('bondProgress').textContent = 'max bond ✨';
+    document.getElementById('bondProgress').textContent = 'bonded ♾';
   }
 
   // Combo label with dynamic emoji
