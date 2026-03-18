@@ -119,7 +119,7 @@
     align-items: start;
   }
 
-  .main-layout.single-col { grid-template-columns: 1fr; max-width: 520px; }
+  .main-layout.single-col { grid-template-columns: 1fr; max-width: 520px; margin: 0 auto; }
 
   @media (max-width: 640px) {
     .main-layout { grid-template-columns: 1fr; }
@@ -1139,6 +1139,8 @@ function showSleepingPreview() {
   // Single column for sleeping preview
   document.querySelector('.main-layout').classList.add('single-col');
   document.getElementById('decayWarning').classList.remove('visible');
+  document.getElementById('sleepOverlay').classList.remove('visible');
+  document.getElementById('catImage').style.filter = '';
   // Fallback if image can't load (e.g. CORS on localhost)
   img.onerror = () => { img.src = 'https://placehold.co/512x512/e8d5b7/9b5c3a?text=zzz...+Mochi'; };
 }
@@ -1322,6 +1324,7 @@ function typewriterEffect(el, text, callback) {
 
 // ─── Sleep Mode ───
 function updateSleepState() {
+  if (!state.apiKey) return; // no sleep mode when logged out
   const idleSecs = (Date.now() - state.lastPetTime) / 1000;
   const overlay = document.getElementById('sleepOverlay');
   const img = document.getElementById('catImage');
