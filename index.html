@@ -556,16 +556,12 @@
           ">
             <optgroup label="── Free ──">
               <option value="openai">openai — GPT-5 Mini</option>
-              <option value="openai-fast">openai-fast — GPT-5 Nano (fastest)</option>
               <option value="mistral">mistral — Mistral Small 3.2</option>
               <option value="gemini-fast">gemini-fast — Gemini 2.5 Flash Lite</option>
               <option value="deepseek">deepseek — DeepSeek V3.2</option>
               <option value="nova-fast">nova-fast — Amazon Nova Micro</option>
               <option value="claude-fast">claude-fast — Claude Haiku 4.5</option>
               <option value="kimi">kimi — Moonshot Kimi K2.5</option>
-              <option value="minimax">minimax — MiniMax M2.5</option>
-              <option value="perplexity-fast">perplexity-fast — Perplexity Sonar</option>
-              <option value="qwen-coder">qwen-coder — Qwen3 Coder 30B</option>
               <option value="glm">glm — Z.ai GLM-5 744B</option>
               <option value="gemini-search">gemini-search — Gemini + Google Search</option>
             </optgroup>
@@ -672,8 +668,11 @@ const IMAGE_MODEL_KEY    = 'mochi_image_model';
 const PAID_TEXT_MODELS   = ['grok','gemini','openai-large','claude','gemini-large','claude-large'];
 const PAID_IMAGE_MODELS  = ['gptimage','p-image','seedream5','kontext','nanobanana','nanobanana-2','gptimage-large','nanobanana-pro'];
 
-function getTextModel()  { return localStorage.getItem(TEXT_MODEL_KEY)  || 'openai'; }
-function getImageModel() { return localStorage.getItem(IMAGE_MODEL_KEY) || 'flux'; }
+const VALID_TEXT_MODELS  = ['openai','mistral','gemini-fast','deepseek','nova-fast','claude-fast','kimi','glm','gemini-search','grok','gemini','openai-large','claude','gemini-large','claude-large'];
+const VALID_IMAGE_MODELS = ['flux','zimage','flux-2-dev','dirtberry','dirtberry-pro','imagen-4','grok-imagine','klein','gptimage','p-image','seedream5','kontext','nanobanana','nanobanana-2','gptimage-large','nanobanana-pro'];
+
+function getTextModel()  { const m = localStorage.getItem(TEXT_MODEL_KEY);  return m && VALID_TEXT_MODELS.includes(m)  ? m : 'openai'; }
+function getImageModel() { const m = localStorage.getItem(IMAGE_MODEL_KEY); return m && VALID_IMAGE_MODELS.includes(m) ? m : 'flux'; }
 
 function onModelChange(type, value) {
   if (type === 'text')  { localStorage.setItem(TEXT_MODEL_KEY, value); }
